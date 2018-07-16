@@ -5,16 +5,18 @@ const wav = require('wav');
 const interact = require('./interact');
 
 const port = 3710;
-const outFile = 'demo.wav';
+const outFile = 'static/demo.wav';
 const app = express();
 
-app.set('views', __dirname + '/tpl');
-app.set('view engine', 'jade');
-app.engine('jade', require('jade').__express);
 app.use(express.static(__dirname + '/public'))
+app.use(express.static(__dirname + '/static'))
 
 app.get('/', function(req, res){
-  res.render('index');
+    res.sendFile(path.join(__dirname + '/public/index.html'));
+});
+
+app.get('/repeat', function(req, res){
+    res.render('index');
 });
 
 app.listen(port);
@@ -39,7 +41,9 @@ binaryServer.on('connection', function(client) {
     stream.on('end', function() {
       fileWriter.end();
       interact.syncRecognize(outFile).then(text =>{
-          interact.speak(text,'repeat');
+          interact.speak(text,'repeat').then(() =>{
+              client.send('over');
+          })
       })
       console.log('wrote to file ' + outFile);
     });

@@ -15,7 +15,7 @@ async function speak(text, output) {
 
         const apiAsync = Bluebird.promisifyAll(client);
         const response = await apiAsync.synthesizeSpeechAsync(request);
-        await Bluebird.promisify(fs.writeFile)(`${output}.mp3`, response.audioContent, 'binary');
+        await Bluebird.promisify(fs.writeFile)(`static/${output}.mp3`, response.audioContent, 'binary');
         console.log(`Audio content written to file: ${output}.mp3`);
     }
     catch (err) {
