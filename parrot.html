@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Parrot</title>
+    <link rel="stylesheet" type="text/css" href="parrotStyle.css">
+  </head>
+  <body>
+    <div id="container" class="">
+      <div class="">
+        <h1>Web Parrot</h1>
+      </div>
+      <div class="">
+        <img id="parrot" src="static/parrot.png" alt="">
+      </div>
+      <div class="">
+        <button id="recordBtn" onmousedown="mouseDown()" onmouseup="mouseUp()" type="button" name="button">Record your voice</button>
+        <button type="button" name="button">Stop recording</button>
+        <script>
+function mouseDown() {
+    document.getElementById("recordBtn").style.color = "red";
+}
+
+function mouseUp() {
+    document.getElementById("recordBtn").style.color = "green";
+}
+</script>
+      </div>
+    </div>
+    <script type="text/javascript" src="recorder.js">
+
+    </script>
+  </body>
+</html>
