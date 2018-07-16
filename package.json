@@ -1,0 +1,21 @@
+{
+  "name": "hal9000",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google-cloud/speech": "^2.0.0",
+    "@google-cloud/text-to-speech": "^0.3.0",
+    "binaryjs": "^0.2.1",
+    "bluebird": "^3.5.1",
+    "express": "^4.16.3",
+    "jade": "^1.11.0",
+    "wav": "^1.0.2",
+    "yargs": "^12.0.1"
+  }
+}
