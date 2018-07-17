@@ -18,12 +18,13 @@ app.get('/', function(req, res){
 app.get('/repeat', function(req, res){
     res.render('index');
 });
+var server = require('http').createServer(app);  
 
-app.listen(port);
+server.listen(port);
 
 console.log('server open on port ' + port);
 
-binaryServer = BinaryServer({port: 9011});
+binaryServer = BinaryServer({server: server});
 
 binaryServer.on('connection', function(client) {
   console.log('new connection');
