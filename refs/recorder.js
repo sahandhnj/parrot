@@ -1,5 +1,5 @@
 (function (window) {
-  var client = new BinaryClient('ws://localhost:9011');
+  var client = new BinaryClient('ws://localhost:3710');
 
   client.on('stream', function (stream, meta) {
     stream.on('data', function (data) {
@@ -24,7 +24,7 @@
     if (!navigator.getUserMedia)
       navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
         navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
+        https://github.com/vin-ni/Google-Cloud-Speech-Node-Socket-Playground.git
     if (navigator.getUserMedia) {
       navigator.getUserMedia({ audio: true }, success, function (e) {
         alert('Error capturing audio.');

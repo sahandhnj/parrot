@@ -15,8 +15,8 @@ async function speak(text, output) {
 
         const apiAsync = Bluebird.promisifyAll(client);
         const response = await apiAsync.synthesizeSpeechAsync(request);
-        await Bluebird.promisify(fs.writeFile)(`static/${output}.mp3`, response.audioContent, 'binary');
-        console.log(`Audio content written to file: ${output}.mp3`);
+        await Bluebird.promisify(fs.writeFile)(`${output}`, response.audioContent, 'binary');
+        console.log(`Audio content written to file: ${output}`);
     }
     catch (err) {
         console.error('ERROR:', err);
@@ -50,7 +50,6 @@ async function syncRecognize(filename) {
         const response = data[0];
         const transcription = response.results.map(result => result.alternatives[0].transcript).join('\n');
         
-        console.log(response);
         console.log('transcription:',transcription);
         return transcription;
     }
