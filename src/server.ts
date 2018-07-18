@@ -9,6 +9,7 @@ import * as fileUpload from 'express-fileupload';
 import * as helmet from 'helmet';
 
 import { AudioRoute } from './routes/AudioRoute';
+import { TalkRoute } from './routes/TalkRoute';
 
 const debug = require('debug')('main');
 
@@ -97,6 +98,7 @@ export class Server {
     private routes() {
         const nonAuthRouter = express.Router();
         AudioRoute.create(nonAuthRouter);
+        TalkRoute.create(nonAuthRouter);
 
         // use router middleware
         this.app.use(nonAuthRouter);

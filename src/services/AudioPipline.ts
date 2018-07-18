@@ -9,6 +9,11 @@ const repeatFile = 'static/repeat.wav';
 
 export class AudioPipline {
     public static pipeIt = async (res, req) =>{
+        if(!req.files.audio || !req.files.audio.data){
+            res.sendStatus(400);
+            return res.send();
+        }
+        
         let binaryArray = new Uint16Array(req.files.audio.data);
 
         fs.writeFile(outFileRaw,  new Buffer(binaryArray as any), () => {
