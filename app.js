@@ -1,69 +1,81 @@
-const express = require('express');
-const fs = require('fs');
-const wav = require('wav');
-const interact = require('./interact');
-const multer = require('multer'); 
-const bodyParser = require('body-parser');
-const fileUpload = require('express-fileupload');
+#!/usr/bin/env node
+'use strict';
 
-const PORT= '3710';
+// load config
+let config = require('./app/config/config');
 
-const app = express();
-let server = require('http').createServer(app);
-server.listen(PORT);
-console.log('Listening on port ' + PORT);
+// module dependencies
+let serverSettings = require('./app/server');
+let debug = require('debug')('express:server');
+let fs = require('fs');
+let protocol = require(config.protocol);
 
-app.use(express.static(__dirname + '/public'));
-app.use(express.static(__dirname + '/static'));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(fileUpload());
+// create server
+let serverPort = normalizePort(config.port);
+let newServer = serverSettings.Server.bootstrap();
+let app = newServer.app;
+let server = protocol.createServer(app);
 
-app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname + '/public/index.html'));
-});
+//listen on provided ports
+server.listen(serverPort);
 
-app.get('/repeat', function (req, res) {
-    res.render('index');
-});
+//add error handler
+server.on('error', onError);
 
-const outFile = 'media/demo.wav';
-const outFileRaw = 'media/demoraw.wav';
-const repeatFile = 'static/repeat.wav';
+//start listening on port
+server.on('listening', onListening);
 
-app.post('/talk', (req, res, next) => {
-    fs.writeFile(outFileRaw, Buffer(new Uint16Array(req.files.audio.data)), () => {
-        console.log('Wrote file to', outFileRaw);
-        
-        let fileWriter = new wav.FileWriter(outFile, {
-            channels: 1,
-            sampleRate: 48000,
-            bitDepth: 16
-        });
-        
-        let readStream = fs.createReadStream(outFileRaw);
-        readStream.on('open', () => {
-            console.log('Piping to wav');
-            readStream.pipe(fileWriter);
+/**
+ * Normalize a port into a number, string, or false.
+ */
+function normalizePort(val) {
+    let port = parseInt(val, 10);
 
-        });
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
 
-        readStream.on('error', err => {
-            res.end(err);
-        });
+    if (port >= 0) {
+        // port number
+        return port;
+    }
 
-        readStream.on('end', async () => {
-            fileWriter.end();
-            console.log('Wrote file to', outFile);
+    return false;
+}
 
-            let text = await interact.syncRecognize(outFile);
-            if(!text){
-                res.sendStatus(400);
-                return res.send();
-            }
+/**
+ * Event listener for HTTP server "error" event.
+ */
+function onError(error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
 
-            await interact.speak(text, repeatFile);
-            res.send();
-        })
-    });
-})
+    let port = config.port;
+    let bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+function onListening() {
+    let addr = server.address();
+    let bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
+    console.log('Parrot');
+    console.log('Listening on ' + bind);
+}
