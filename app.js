@@ -57,10 +57,13 @@ app.post('/talk', (req, res, next) => {
             console.log('Wrote file to', outFile);
 
             let text = await interact.syncRecognize(outFile);
+            if(!text){
+                res.sendStatus(400);
+                return res.send();
+            }
+
             await interact.speak(text, repeatFile);
-            
             res.send();
         })
-
     });
 })

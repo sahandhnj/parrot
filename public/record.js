@@ -43,11 +43,15 @@ const enableMicrophoneStream = async () => {
 
 }
 
-const repeat = () => {
+const repeat = (failed) => {
     let audio = document.getElementById("playAudio");
     let random = Math.floor(Math.random() * 1000) + 1
 
     audio.src = "repeat.wav?cb=" + random;
+    if(failed){
+        audio.src = "error.wav";
+    }
+
     audio.load();
     audio.play();
 }
@@ -67,7 +71,7 @@ const mic = {
             headers: { Accept: "application/json" },
             method: "POST", body: fd
         }).then(response => {
-            repeat();
+            repeat(response.status === 400);
         })
     
         audioChunks = [];
