@@ -5,7 +5,7 @@ import { InteractionService } from './InteractionService';
 
 const outFile = 'media/demo.wav';
 const outFileRaw = 'media/demoraw.wav';
-const repeatFile = 'media/repeat.wav';
+const repeatFile = 'static/repeat.wav';
 
 export class AudioPipline {
     public static pipeIt = async (res, req) =>{

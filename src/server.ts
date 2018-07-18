@@ -48,8 +48,7 @@ export class Server {
     public config() {
         // add static paths
         this.app.use(express.static(path.join(__dirname, 'public')));
-        this.app.use(express.static(path.join(__dirname, 'static')));
-        this.app.use(express.static(path.join(__dirname, '../media')));
+        this.app.use(express.static(path.join(__dirname, '../static')));
 
         // mount logger
         this.app.use(logger(config.morgan.level || 'dev'));

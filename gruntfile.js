@@ -10,15 +10,7 @@ module.exports = function(grunt) {
                         src: ['**'],
                         dest: './app/public',
                     },
-                ],
-                files: [
-                    {
-                        expand: true,
-                        cwd: './static',
-                        src: ['**'],
-                        dest: './app/static',
-                    },
-                ],
+                ]
             },
         },
         exec: {
