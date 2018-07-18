@@ -1,11 +1,13 @@
 const fs = require('fs');
 const wav = require('wav');
+const uuidv4 = require('uuid/v4');
+const path = require('path');
 
 import { InteractionService } from './InteractionService';
 
-const outFile = 'media/demo.wav';
-const outFileRaw = 'media/demoraw.wav';
-const repeatFile = 'static/repeat.wav';
+const convertedDir = 'media/converted';
+const rawDir = 'media/raw';
+const outputDir = 'static/output';
 
 export class AudioPipline {
     public static pipeIt = async (res, req) =>{
@@ -14,22 +16,26 @@ export class AudioPipline {
             return res.send();
         }
         
+        const uuid= uuidv4();
+        const convertedFile = path.join(convertedDir,uuid + '.wav');
+        const rawFile = path.join(rawDir, uuid);
+        const outputFile = path.join(outputDir, uuid+ '.wav');
+
         let binaryArray = new Uint16Array(req.files.audio.data);
 
-        fs.writeFile(outFileRaw,  new Buffer(binaryArray as any), () => {
-            console.log('\n\nWrote file to', outFileRaw);
+        fs.writeFile(rawFile,  new Buffer(binaryArray as any), () => {
+            console.log('\n\nWrote file to', rawFile);
             
-            let fileWriter = new wav.FileWriter(outFile, {
+            let fileWriter = new wav.FileWriter(convertedFile, {
                 channels: 1,
                 sampleRate: 48000,
                 bitDepth: 16
             });
             
-            let readStream = fs.createReadStream(outFileRaw);
+            let readStream = fs.createReadStream(rawFile);
             readStream.on('open', () => {
                 console.log('Piping to wav');
                 readStream.pipe(fileWriter);
-    
             });
     
             readStream.on('error', err => {
@@ -38,9 +44,9 @@ export class AudioPipline {
     
             readStream.on('end', async () => {
                 fileWriter.end();
-                console.log('Wrote file to', outFile);
+                console.log('Wrote file to', convertedFile);
     
-                let transcription = await InteractionService.syncRecognize(outFile);
+                let transcription = await InteractionService.syncRecognize(convertedFile);
                 console.log('transcription:',transcription);
 
                 if(!transcription){
@@ -48,8 +54,8 @@ export class AudioPipline {
                     return res.send();
                 }
     
-                await InteractionService.speak(transcription, repeatFile);
-                res.send();
+                await InteractionService.speak(transcription, outputFile);
+                res.send({name: uuid + '.wav'});
             })
         });
     }

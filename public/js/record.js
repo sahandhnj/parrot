@@ -43,13 +43,15 @@ const enableMicrophoneStream = async () => {
 
 }
 
-const repeat = (failed) => {
+const repeat = (failed,name) => {
     let audio = document.getElementById("playAudio");
     let random = Math.floor(Math.random() * 1000) + 1
 
-    audio.src = "repeat.wav?cb=" + random;
-    if(failed){
+    if(failed) {
         audio.src = "error.wav";
+    } 
+    else {
+        audio.src = 'output/'+ name + "?cb=" + random;
     }
 
     audio.load();
@@ -70,8 +72,14 @@ const mic = {
         fetch(API + '/talk', {
             headers: { Accept: "application/json" },
             method: "POST", body: fd
-        }).then(response => {
-            repeat(response.status === 400);
+        })
+        .then(async response => {
+            if(response.status === 400){
+                return repeat(true, response.body.name);
+            }
+
+            let body= await response.json()
+            repeat(false, body.name);
         })
     
         audioChunks = [];

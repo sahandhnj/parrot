@@ -8,10 +8,6 @@ export class AudioRoute {
     }
 
     public static create(router: Router) {
-        router.get('/', (req: Request, res: Response, next: NextFunction) => {
-            res.sendFile(path.join(__dirname + '/public/index.html'));
-        });
-
         router.post('/talk', (req: Request, res: Response, next: NextFunction) => {
             AudioPipline.pipeIt(res, req);
         });
