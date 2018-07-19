@@ -1,0 +1,5 @@
+CREATE TABLE audiolog (
+  id BIGSERIAL PRIMARY KEY NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  audio_content VARCHAR(255) NOT NULL
+);
