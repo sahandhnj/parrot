@@ -5,6 +5,8 @@ const path = require('path');
 
 import { InteractionService } from './InteractionService';
 import { DataBaseService } from './DataBaseService';
+import { Calculator } from './Calculator';
+import { Weather } from './Weather';
 
 const convertedDir = 'media/converted';
 const rawDir = 'media/raw';
@@ -55,8 +57,26 @@ export class AudioPipline {
                     return res.send();
                 }
     
+                let answer= "I don't know how to answer this question."
+                switch(transcription) {
+                    case "hello":
+                        answer= 'hi'
+                        break;
+                    case "let's go play football":
+                        answer= "no I don't like football"
+                        break;
+                }
+
+                if(transcription.toLowerCase().startsWith("calculate")){
+                    answer = Calculator.calculate(transcription);
+                }
+
+                if(transcription.toLowerCase().includes("extreme")){
+                    answer = await Weather.extemes(transcription);
+                }
+
                 await DataBaseService.insert(uuid, transcription);
-                await InteractionService.speak(transcription, outputFile);
+                await InteractionService.speak(answer, outputFile);
                 res.send({name: uuid + '.wav'});
             })
         });
