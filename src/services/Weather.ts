@@ -5,7 +5,6 @@ export class Weather {
         let response = await fetch('https://extreme.sahand.cloud/getData').then(res => res.json());
         let text = response.text;
 
-        console.log(text);
         return text;
     }
 }

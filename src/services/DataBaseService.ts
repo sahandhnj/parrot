@@ -27,9 +27,16 @@ export class DataBaseService {
 
     public static reply = async (question) => {
       try {
-        var data = dHandler.queryAsync("SELECT answers FROM logic WHERE ($1) = ANY(question);" [question]);
-        var reply = data[Math.floor(Math.random()*data.length)];
-        console.log(reply);
+        var data = await dbHandler.queryAsync("SELECT answers FROM logic WHERE ($1) = ANY(questions);", [question]);
+        let answerRows = data.rows;
+        let reply;
+
+        if(answerRows.length > 0){
+            let answerOptions = answerRows[0].answers;
+            reply = answerOptions[Math.floor(Math.random() * answerOptions.length)];
+        }
+           
+        return reply;
 
       }
       catch(e){

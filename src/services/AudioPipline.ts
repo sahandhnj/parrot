@@ -57,15 +57,17 @@ export class AudioPipline {
                     return res.send();
                 }
     
-                let answer= "I don't know how to answer this question."
-                switch(transcription) {
-                    case "hello":
-                        answer= 'hi'
-                        break;
-                    case "let's go play football":
-                        answer= "no I don't like football"
-                        break;
-                }
+                let answer;
+                // switch(transcription) {
+                //     case "hello":
+                //         answer= 'hi'
+                //         break;
+                //     case "let's go play football":
+                //         answer= "no I don't like football"
+                //         break;
+                // }
+
+                answer = await DataBaseService.reply(transcription);
 
                 if(transcription.toLowerCase().startsWith("calculate")){
                     answer = Calculator.calculate(transcription);
@@ -73,6 +75,10 @@ export class AudioPipline {
 
                 if(transcription.toLowerCase().includes("extreme")){
                     answer = await Weather.extemes(transcription);
+                }
+
+                if(!answer){
+                    answer = "I don't know how to answer this question.";
                 }
 
                 await DataBaseService.insert(uuid, transcription);
