@@ -38,7 +38,13 @@ body {
 }
 
 #recordBtn {
+<<<<<<< HEAD
 	background: #080c28;
 	/* width: 100px;
 	height: 100px; */
+=======
+	background: #d11d47;
+	width: 200px;
+	height: 200px;
+>>>>>>> 68bdd9a8663c8e0695459049b03c9f62886fefa5
 }

@@ -16,7 +16,20 @@ const convertoFloat32ToInt16 = (buffer) => {
 
 const enableMicrophoneStream = async () => {
     try {
+        if (!navigator.getUserMedia){
+            navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
+            navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        }
+
+        if(!navigator.getUserMedia){
+            alert('No navigator found');
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        if(!stream){
+            alert('No audio stream found');
+        }
         const audioContext = window.AudioContext || window.webkitAudioContext;
         const context = new audioContext();
 
