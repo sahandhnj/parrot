@@ -16,8 +16,9 @@ export class DataBaseService {
 
     public static insert = async (file_name, audio_content) => {
         try{
-            const data = await dbHandler.queryAsync('INSERT INTO audiolog (file_name, audio_content) VALUES ($1, $2)', 
-            [file_name, audio_content]);
+            const timestamp= new Date();
+            const data = await dbHandler.queryAsync('INSERT INTO audiolog (file_name, time_stamp, audio_content) VALUES ($1, $2, $3)', 
+            [file_name, timestamp, audio_content]);
         }
         catch(e){
             console.log(e);
