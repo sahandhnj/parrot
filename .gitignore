@@ -1,7 +1,8 @@
 node_modules
 creds.json
 demo.wav
-media
+media/raw/*
+media/converted/*
 app
 backup
-static/output
+static/output/*
