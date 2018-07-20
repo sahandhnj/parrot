@@ -87,12 +87,12 @@ const mic = {
 };
 
 let mouseDown = function () {
-    document.getElementById("recordBtn").style.color = "red";
+    document.getElementById("recordBtn").style.background = "#00FF00";
     mic.start();
 }
 
 let mouseUp = function () {
-    document.getElementById("recordBtn").style.color = "green";
+    document.getElementById("recordBtn").style.background = "#d11d47";
     mic.stop();
 }
 
