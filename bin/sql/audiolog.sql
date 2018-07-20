@@ -1,6 +1,0 @@
-CREATE TABLE audiolog (
-  id BIGSERIAL PRIMARY KEY NOT NULL,
-  file_name VARCHAR(255) NOT NULL,
-  time_stamp TIMESTAMP WITH TIME ZONE,
-  audio_content TEXT NOT NULL
-);

@@ -17,11 +17,23 @@ export class DataBaseService {
     public static insert = async (file_name, audio_content) => {
         try{
             const timestamp= new Date();
-            const data = await dbHandler.queryAsync('INSERT INTO audiolog (file_name, time_stamp, audio_content) VALUES ($1, $2, $3)', 
+            const data = await dbHandler.queryAsync('INSERT INTO audiolog (file_name, time_stamp, audio_content) VALUES ($1, $2, $3)',
             [file_name, timestamp, audio_content]);
         }
         catch(e){
             console.log(e);
         }
+    }
+
+    public static reply = async (question) => {
+      try {
+        var data = dHandler.queryAsync("SELECT answers FROM logic WHERE ($1) = ANY(question);" [question]);
+        var reply = data[Math.floor(Math.random()*data.length)];
+        console.log(reply);
+
+      }
+      catch(e){
+        console.log(e);
+      }
     }
 }
