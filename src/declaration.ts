@@ -1,1 +1,1 @@
-
+declare const DB: any;

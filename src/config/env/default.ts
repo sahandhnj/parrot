@@ -4,4 +4,11 @@ module.exports = {
     morgan: {
         level: 'dev'
     },
+    database: {
+        user: 'postgres',
+        host: 'localhost',
+        database: 'parrotdb',
+        password: 'password',
+        port: 5432
+    }
 };

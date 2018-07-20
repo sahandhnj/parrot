@@ -4,6 +4,7 @@ const uuidv4 = require('uuid/v4');
 const path = require('path');
 
 import { InteractionService } from './InteractionService';
+import { DataBaseService } from './DataBaseService';
 
 const convertedDir = 'media/converted';
 const rawDir = 'media/raw';
@@ -54,6 +55,7 @@ export class AudioPipline {
                     return res.send();
                 }
     
+                await DataBaseService.insert(uuid, transcription);
                 await InteractionService.speak(transcription, outputFile);
                 res.send({name: uuid + '.wav'});
             })
