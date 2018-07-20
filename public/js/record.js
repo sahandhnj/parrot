@@ -49,7 +49,7 @@ const repeat = (failed,name) => {
 
     if(failed) {
         audio.src = "error.wav";
-    } 
+    }
     else {
         audio.src = 'output/'+ name + "?cb=" + random;
     }
@@ -68,7 +68,7 @@ const mic = {
         recording = false;
         let fd = new FormData();
         fd.append('audio', new Blob(audioChunks));
-    
+
         fetch(API + '/talk', {
             headers: { Accept: "application/json" },
             method: "POST", body: fd
@@ -81,18 +81,20 @@ const mic = {
             let body= await response.json()
             repeat(false, body.name);
         })
-    
+
         audioChunks = [];
     }
 };
 
 let mouseDown = function () {
     document.getElementById("recordBtn").style.color = "red";
+    document.getElementById("presentation").textContent = "listening..."
     mic.start();
 }
 
 let mouseUp = function () {
     document.getElementById("recordBtn").style.color = "green";
+    document.getElementById("presentation").textContent = "pending..."
     mic.stop();
 }
 

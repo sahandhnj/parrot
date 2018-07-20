@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head> 
-     <script type="text/javascript" src="js/record.js">
-     </script>
+  <head>
+     <script type="text/javascript" src="js/record.js"></script>
     <meta charset="utf-8">
-    <title>Parrot</title>
+    <title>HAL9000</title>
     <link rel="stylesheet" type="text/css" href="style/parrotStyle.css">
   </head>
   <body>
-    <div id="container" class="">
-      <div class="">
-        <h1>Web Parrot</h1>
-      </div>
-      <div class="">
-        <img id="parrot" src="img/parrot.png" alt="">
-      </div>
-      <div class="">
-        <div id="recordBtn" onmousedown="mouseDown()" onmouseup="mouseUp()">
+    <div id="recordBtn" onmousedown="mouseDown()" onmouseup="mouseUp()">
+      <div class="centre">
+        <div class="heading">
+          <h1>HAL9000</h1>
         </div>
-        <audio id="playAudio">
-            <source type="audio/mpeg">
-        </audio>
+        <div id="presentation">
+          <p>pending...</p>
+        </div>
+        <div class="icon">
+          <img id="hal" src="img/hal9000.png" alt="">
+        </div>
+        <div id="credits">
+        </div>
       </div>
+      <audio id="playAudio">
+          <source type="audio/mpeg">
+      </audio>
     </div>
   </body>
 </html>

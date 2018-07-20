@@ -1,23 +1,44 @@
 body {
-	background-color: #FFCB33;
+	background-color: #080c28;
 	margin: 0;
 	font-family: "Montserrat", "Avenir";
+	color: white;
 }
 
-#container {
-  display: block;
+.heading {
+	color: white;
+}
+
+.centre {
 	margin-left: auto;
-  margin-right: auto;
-	max-width: 600px;
+	margin-right: auto;
+	display: block;
+	text-align: center;
 }
 
-#parrot {
+#presentation {
+	margin-left: auto;
+	margin-right: auto;
+	display: block;
+	text-align: center;
+}
+
+.icon {
+	margin-left: auto;
+	margin-right: auto;
+	display: block;
+}
+
+#hal {
   width: 50%;
   height: 50%;
+	margin-left: auto;
+	margin-right: auto;
+	display: block;
 }
 
 #recordBtn {
-	background: #d11d47;
-	width: 100px;
-	height: 100px;
+	background: #080c28;
+	/* width: 100px;
+	height: 100px; */
 }
