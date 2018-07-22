@@ -1,112 +1,143 @@
 import Microphone from './microphone';
 
 const defaultConfig = {
-  nFrequencyBars: 255,
-  onAnalysed: null,
+	nFrequencyBars: 255,
+	onAnalysed: null,
 };
 
 class Recorder {
-  constructor(audioContext, config = {}) {
-    this.config = Object.assign({}, defaultConfig, config);
+	constructor(audioContext, config = {}) {
+		this.config = Object.assign({}, defaultConfig, config);
 
-    this.audioContext = audioContext;
-    this.audioInput = null;
-    this.realAudioInput = null;
-    this.inputPoint = null;
-    this.audioRecorder = null;
-    this.rafID = null;
-    this.analyserContext = null;
-    this.recIndex = 0;
-    this.stream = null;
+		this.audioContext = audioContext;
+		this.audioInput = null;
+		this.realAudioInput = null;
+		this.inputPoint = null;
+		this.audioRecorder = null;
+		this.rafID = null;
+		this.analyserContext = null;
+		this.recIndex = 0;
+		this.stream = null;
 
-    this.updateAnalysers = this.updateAnalysers.bind(this);
-  }
+		this.updateAnalysers = this.updateAnalysers.bind(this);
+	}
 
-  init(stream) {
-    return new Promise((resolve) => {
-      this.inputPoint = this.audioContext.createGain();
+	init(stream) {
+		return new Promise((resolve) => {
+			this.inputPoint = this.audioContext.createGain();
 
-      this.stream = stream;
+			this.stream = stream;
 
-      this.realAudioInput = this.audioContext.createMediaStreamSource(stream);
-      this.audioInput = this.realAudioInput;
-      this.audioInput.connect(this.inputPoint);
+			this.realAudioInput = this.audioContext.createMediaStreamSource(stream);
+			this.audioInput = this.realAudioInput;
+			this.audioInput.connect(this.inputPoint);
 
-      this.analyserNode = this.audioContext.createAnalyser();
-      this.analyserNode.fftSize = 2048;
-      this.inputPoint.connect(this.analyserNode);
+			this.analyserNode = this.audioContext.createAnalyser();
+			this.analyserNode.fftSize = 2048;
+			this.inputPoint.connect(this.analyserNode);
 
-      this.audioRecorder = new Microphone(this.inputPoint);
+			this.audioRecorder = new Microphone(this.inputPoint);
 
-      const zeroGain = this.audioContext.createGain();
-      zeroGain.gain.value = 0.0;
+			const zeroGain = this.audioContext.createGain();
+			zeroGain.gain.value = 0.0;
 
-      this.inputPoint.connect(zeroGain);
-      zeroGain.connect(this.audioContext.destination);
+			this.inputPoint.connect(zeroGain);
+			zeroGain.connect(this.audioContext.destination);
 
-      this.updateAnalysers();
+			this.updateAnalysers();
 
-      resolve();
-    });
-  }
+			resolve();
+		});
+	}
 
-  start() {
-    return new Promise((resolve, reject) => {
-      if (!this.audioRecorder) {
-        reject('Not currently recording');
-        return;
-      }
+	start() {
+		return new Promise((resolve, reject) => {
+			if (!this.audioRecorder) {
+				reject('Not currently recording');
+				return;
+			}
 
-      this.audioRecorder.clear();
-      this.audioRecorder.record();
+			this.audioRecorder.clear();
+			this.audioRecorder.record();
 
-      resolve(this.stream);
-    });
-  }
+			resolve(this.stream);
+		});
+	}
 
-  stop() {
-    return new Promise((resolve) => {
-      this.audioRecorder.stop();
+	stop() {
+		return new Promise((resolve) => {
+			this.audioRecorder.stop();
 
-      this.audioRecorder.getBuffer((buffer) => {
-        this.audioRecorder.exportWAV(blob => resolve({buffer, blob}));
-      });
-    });
-  }
+			this.audioRecorder.getBuffer((buffer) => {
+				this.audioRecorder.exportWAV(blob => resolve({ buffer, blob }));
+			});
+		});
+	}
 
-  updateAnalysers() {
-    if (this.config.onAnalysed) {
-      requestAnimationFrame(this.updateAnalysers);
+	updateAnalysers() {
+		if (this.config.onAnalysed) {
+			requestAnimationFrame(this.updateAnalysers);
 
-      const freqByteData = new Uint8Array(this.analyserNode.frequencyBinCount);
+			const freqByteData = new Uint8Array(this.analyserNode.frequencyBinCount);
 
-      this.analyserNode.getByteFrequencyData(freqByteData);
+			this.analyserNode.getByteFrequencyData(freqByteData);
 
-      const data = new Array(255);
-      let lastNonZero = 0;
-      let datum;
+			const data = new Array(255);
+			let lastNonZero = 0;
+			let datum;
 
-      for (let idx = 0; idx < 255; idx += 1) {
-        datum = Math.floor(freqByteData[idx]) - (Math.floor(freqByteData[idx]) % 5);
+			for (let idx = 0; idx < 255; idx += 1) {
+				datum = Math.floor(freqByteData[idx]) - (Math.floor(freqByteData[idx]) % 5);
 
-        if (datum !== 0) {
-          lastNonZero = idx;
-        }
+				if (datum !== 0) {
+					lastNonZero = idx;
+				}
 
-        data[idx] = datum;
-      }
+				data[idx] = datum;
+			}
 
-      this.config.onAnalysed({data, lineTo: lastNonZero});
+			this.config.onAnalysed({ data, lineTo: lastNonZero });
+		}
+	}
+
+	setOnAnalysed(handler) {
+		this.config.onAnalysed = handler;
+	}
+}
+const API = 'http://localhost:3710';
+const repeat = (failed,name) => {
+    let audio = document.getElementById("playAudio");
+    let random = Math.floor(Math.random() * 1000) + 1
+
+    if(failed) {
+        audio.src = "error.wav";
     }
-  }
+    else {
+        audio.src = API + '/output/'+ name + "?cb=" + random;
+    }
 
-  setOnAnalysed(handler) {
-    this.config.onAnalysed = handler;
-  }
+    audio.load();
+    audio.play();
 }
 
 Recorder.download = function download(blob, filename = 'audio') {
-  Microphone.forceDownload(blob, `${filename}.wav`);
+	//Microphone.forceDownload(blob, `${filename}.wav`);
+	let fd = new FormData();
+	fd.append('audio', blob);
+
+	fetch(API + '/talk', {
+		headers: { Accept: "application/json" },
+		method: "POST", body: fd
+	})
+	.then(async response => {
+		if (response.status === 400) {
+			return repeat(true, response.body.name);
+		}
+
+		let body = await response.json()
+		repeat(false, body.name);
+	})
 };
+
 
 export default Recorder;

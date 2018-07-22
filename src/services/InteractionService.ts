@@ -34,7 +34,7 @@ export class InteractionService {
     
             const config = {
                 encoding: encoding,
-                sampleRateHertz: sampleRateHertz,
+                //sampleRateHertz: sampleRateHertz,
                 languageCode: languageCode,
             };
     

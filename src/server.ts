@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as logger from 'morgan';
 import * as fileUpload from 'express-fileupload';
 import * as helmet from 'helmet';
+const cors = require('cors')
 
 import { AudioRoute } from './routes/AudioRoute';
 import { TalkRoute } from './routes/TalkRoute';
@@ -73,6 +74,9 @@ export class Server {
 
         // helmet
         this.app.use(helmet());
+
+        //CORS
+        this.app.use(cors())
 
         // use bluebird promises
         global.Promise = require('bluebird');

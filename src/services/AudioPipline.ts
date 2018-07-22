@@ -21,16 +21,15 @@ export class AudioPipline {
         
         const uuid= uuidv4();
         const convertedFile = path.join(convertedDir,uuid + '.wav');
-        const rawFile = path.join(rawDir, uuid);
+        const rawFile = path.join(rawDir, uuid + '.wav');
         const outputFile = path.join(outputDir, uuid+ '.wav');
 
-        let binaryArray = new Uint16Array(req.files.audio.data);
-
+        let binaryArray = new Uint8Array(req.files.audio.data);
         fs.writeFile(rawFile,  new Buffer(binaryArray as any), () => {
             console.log('\n\nWrote file to', rawFile);
             
             let fileWriter = new wav.FileWriter(convertedFile, {
-                channels: 1,
+                channels: 2,
                 sampleRate: 48000,
                 bitDepth: 16
             });
@@ -49,7 +48,7 @@ export class AudioPipline {
                 fileWriter.end();
                 console.log('Wrote file to', convertedFile);
     
-                let transcription = await InteractionService.syncRecognize(convertedFile);
+                let transcription = await InteractionService.syncRecognize(rawFile);
                 console.log('transcription:',transcription);
 
                 if(!transcription){
