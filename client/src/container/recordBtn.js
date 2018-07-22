@@ -21,7 +21,7 @@ class RecordBtn extends Component {
                 <div id="presentation">
                     <p>{this.props.isRecording ? "Recording ..." : "Listening ..."}</p>
                 </div>
-                <div className="icon" onMouseDown={this.props.down} onMouseUp={this.props.up}>
+                <div className="icon" onMouseDown={this.props.down} onMouseUp={this.props.up} onTouchStart={this.props.down} onTouchEnd={this.props.up}>
                     <img src={hal} alt="hal9000" />
                     <div id="transcript">
                         { this.transcript() }
