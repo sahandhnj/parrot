@@ -5,6 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node_modules/grunt/bin/grunt build && node app.js",
+    "prod" : "bash ./build.sh",
     "test": "echo \"Error: no test specified\" && exit 1",
     "config": "./bin/dbconfig.sh"
   },
