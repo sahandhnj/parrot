@@ -11,4 +11,3 @@ mv build ../app
 
 cd ..
 mv app/build app/public
-node app.js
