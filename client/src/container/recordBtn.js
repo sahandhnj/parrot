@@ -9,22 +9,26 @@ class RecordBtn extends Component {
         this.state = {};
     }
 
-    transcript(){
-        if(this.props.transcript){
+    transcript() {
+        if (this.props.transcript) {
             return 'You said: ' + this.props.transcript;
         }
     }
 
+    _handleContextMenu = (event) => {
+        event.preventDefault();
+    }
+
     render() {
         return (
-            <div className="centre">
+            <div id="record-btn" className="centre" onContextMenu={this._handleContextMenu}>
                 <div id="presentation">
                     <p>{this.props.isRecording ? "Recording ..." : "Listening ..."}</p>
                 </div>
                 <div className="icon" onMouseDown={this.props.down} onMouseUp={this.props.up} onTouchStart={this.props.down} onTouchEnd={this.props.up}>
                     <img src={hal} alt="hal9000" />
                     <div id="transcript">
-                        { this.transcript() }
+                        {this.transcript()}
                     </div>
                 </div>
             </div>
