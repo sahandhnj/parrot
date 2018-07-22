@@ -3,10 +3,11 @@ import './style/App.css';
 
 import WaveStream from 'react-wave-stream';
 import Recorder from './service/recorder';
+import RecordBtn from './container/recordBtn';
 
 class App extends Component {
-	constructor(...args) {
-		super(...args);
+	constructor(...props) {
+		super(...props);
 
 		this.state = {
 			blob: null,
@@ -17,7 +18,6 @@ class App extends Component {
 
 		this.start = this.start.bind(this);
 		this.stop = this.stop.bind(this);
-		this.download = this.download.bind(this);
 
 		this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -43,42 +43,25 @@ class App extends Component {
 			.then(({ blob }) => this.setState({
 				isRecording: false,
 				blob,
-			}));
+			})).then(() =>{
+				Recorder.download(this.state.blob, 'react-audio');
+				
+				this.setState({ blob: null });
+			})
 	}
 
 	dontGotStream(error) {
 		console.log('Get stream failed', error);
 	}
 
-	download() {
-		Recorder.download(this.state.blob, 'react-audio');
-
-		this.setState({ blob: null });
-	}
-
 	render() {
-		const {
-			isRecording,
-			blob,
-			//stream,
-		} = this.state;
-
 		return (
 			<div className="App">
 				<div className="App-header">
-					<h2>Recording Studio</h2>
-
-					<div className="App-buttons">
-						{ isRecording ? 
-							(<button onClick={this.stop}>Stop</button> ) :
-							(<button onClick={this.start}>Start</button>)
-						}
-						{
-							blob && (<button onClick={this.download}> Download </button>)
-						}
-					</div>
+					<h2>Hal9000</h2>
+					<RecordBtn down={this.start} up={this.stop} isRecording={this.state.isRecording}/> 
 				</div>
-				<div className="App-studio">
+				<div className="wave-stream-container">
 					<WaveStream {...this.state.analyserData} />
 				</div>
 				<div>

@@ -8,29 +8,17 @@
   position: relative;
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
-}
-
 .App-header {
   flex: 1;
   padding: 20px;
   color: #333;
 }
 
-.App-buttons {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-}
-
 h1 {
   font-size: large;
 }
 
-.App-studio {
+.wave-stream-container{
   flex: 3;
   position: relative;
 }
