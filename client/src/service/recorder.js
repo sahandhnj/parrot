@@ -120,23 +120,24 @@ const repeat = (failed,name) => {
     audio.play();
 }
 
-Recorder.download = function download(blob, filename = 'audio') {
-	//Microphone.forceDownload(blob, `${filename}.wav`);
+Recorder.process = async (blob) => {
 	let fd = new FormData();
 	fd.append('audio', blob);
 
-	fetch(API + '/talk', {
+	const response = await fetch(API + '/talk', {
 		headers: { Accept: "application/json" },
 		method: "POST", body: fd
-	})
-	.then(async response => {
-		if (response.status === 400) {
-			return repeat(true, response.body.name);
-		}
+	});
 
-		let body = await response.json()
-		repeat(false, body.name);
-	})
+	if (response.status === 400) {
+		return repeat(true, response.body.name);
+	}
+
+	let body = await response.json();
+	console.log(body);
+	repeat(false, body.name);
+
+	return body.transcript;
 };
 
 

@@ -57,14 +57,6 @@ export class AudioPipline {
                 }
     
                 let answer;
-                // switch(transcription) {
-                //     case "hello":
-                //         answer= 'hi'
-                //         break;
-                //     case "let's go play football":
-                //         answer= "no I don't like football"
-                //         break;
-                // }
 
                 answer = await DataBaseService.reply(transcription);
 
@@ -82,7 +74,7 @@ export class AudioPipline {
 
                 await DataBaseService.insert(uuid, transcription);
                 await InteractionService.speak(answer, outputFile);
-                res.send({name: uuid + '.wav'});
+                res.send({name: uuid + '.wav', transcript: transcription});
             })
         });
     }

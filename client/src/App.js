@@ -13,6 +13,7 @@ class App extends Component {
 			blob: null,
 			isRecording: false,
 			stream: null,
+			transcript: null,
 			analyserData: { data: [], lineTo: 0 },
 		};
 
@@ -38,16 +39,20 @@ class App extends Component {
 			.then(() => this.setState({ isRecording: true }));
 	}
 
-	stop() {
-		this.recorder.stop()
-			.then(({ blob }) => this.setState({
-				isRecording: false,
-				blob,
-			})).then(() =>{
-				Recorder.download(this.state.blob, 'react-audio');
-				
-				this.setState({ blob: null });
-			})
+	async stop() {
+		const { blob } = await this.recorder.stop();
+		
+		this.setState({
+			isRecording: false,
+			blob,
+		});
+		
+		const transcript = await Recorder.process(this.state.blob);
+		
+		this.setState({ 
+			blob: null ,
+			transcript: transcript,
+		});
 	}
 
 	dontGotStream(error) {
@@ -59,7 +64,7 @@ class App extends Component {
 			<div className="App">
 				<div className="App-header">
 					<h2>Hal9000</h2>
-					<RecordBtn down={this.start} up={this.stop} isRecording={this.state.isRecording}/> 
+					<RecordBtn down={this.start} up={this.stop} isRecording={this.state.isRecording} transcript={this.state.transcript}/> 
 				</div>
 				<div className="wave-stream-container">
 					<WaveStream {...this.state.analyserData} />

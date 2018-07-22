@@ -9,6 +9,12 @@ class RecordBtn extends Component {
         this.state = {};
     }
 
+    transcript(){
+        if(this.props.transcript){
+            return 'You said: ' + this.props.transcript;
+        }
+    }
+
     render() {
         return (
             <div className="centre">
@@ -16,8 +22,9 @@ class RecordBtn extends Component {
                     <p>{this.props.isRecording ? "Recording ..." : "Listening ..."}</p>
                 </div>
                 <div className="icon" onMouseDown={this.props.down} onMouseUp={this.props.up}>
-                    <img id="hal" src={hal} alt="hal9000" />
-                    <div id="credits">
+                    <img src={hal} alt="hal9000" />
+                    <div id="transcript">
+                        { this.transcript() }
                     </div>
                 </div>
             </div>
