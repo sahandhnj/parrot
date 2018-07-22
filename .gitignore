@@ -6,3 +6,4 @@ media/converted/*
 app
 backup
 static/output/*
+data
