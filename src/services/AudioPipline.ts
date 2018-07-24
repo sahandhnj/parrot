@@ -1,4 +1,7 @@
 const fs = require('fs');
+const Bluebird = require('bluebird');
+const fsp = Bluebird.promisifyAll(fs);
+
 const wav = require('wav');
 const uuidv4 = require('uuid/v4');
 const path = require('path');
@@ -8,74 +11,48 @@ import { DataBaseService } from './DataBaseService';
 import { Calculator } from './Calculator';
 import { Weather } from './Weather';
 
-const convertedDir = 'media/converted';
 const rawDir = 'media/raw';
 const outputDir = 'static/output';
-
 export class AudioPipline {
-    public static pipeIt = async (res, req) =>{
-        if(!req.files.audio || !req.files.audio.data){
+    public static pipeIt = async (res, req) => {
+        if (!req.files.audio || !req.files.audio.data) {
             res.sendStatus(400);
             return res.send();
         }
-        
-        const uuid= uuidv4();
-        const convertedFile = path.join(convertedDir,uuid + '.wav');
+
+        const uuid = uuidv4();
         const rawFile = path.join(rawDir, uuid + '.wav');
-        const outputFile = path.join(outputDir, uuid+ '.wav');
+        const outputFile = path.join(outputDir, uuid + '.wav');
 
         let binaryArray = new Uint8Array(req.files.audio.data);
-        fs.writeFile(rawFile,  new Buffer(binaryArray as any), () => {
-            console.log('\n\nWrote file to', rawFile);
-            
-            let fileWriter = new wav.FileWriter(convertedFile, {
-                channels: 2,
-                sampleRate: 48000,
-                bitDepth: 16
-            });
-            
-            let readStream = fs.createReadStream(rawFile);
-            readStream.on('open', () => {
-                console.log('Piping to wav');
-                readStream.pipe(fileWriter);
-            });
-    
-            readStream.on('error', err => {
-                res.end(err);
-            });
-    
-            readStream.on('end', async () => {
-                fileWriter.end();
-                console.log('Wrote file to', convertedFile);
-    
-                let transcription = await InteractionService.syncRecognize(rawFile);
-                console.log('transcription:',transcription);
+        await fsp.writeFileAsync(rawFile, new Buffer(binaryArray as any));
 
-                if(!transcription){
-                    res.sendStatus(400);
-                    return res.send();
-                }
-    
-                let answer;
+        let transcription = await InteractionService.syncRecognize(rawFile);
+        console.log('transcription:', transcription);
 
-                answer = await DataBaseService.reply(transcription);
+        if (!transcription) {
+            res.sendStatus(400);
+            return res.send();
+        }
 
-                if(transcription.toLowerCase().startsWith("calculate")){
-                    answer = Calculator.calculate(transcription);
-                }
+        let answer;
 
-                if(transcription.toLowerCase().includes("extreme")){
-                    answer = await Weather.extemes(transcription);
-                }
+        answer = await DataBaseService.reply(transcription);
 
-                if(!answer){
-                    answer = "I don't know how to answer this question.";
-                }
+        if (transcription.toLowerCase().startsWith("calculate")) {
+            answer = Calculator.calculate(transcription);
+        }
 
-                await DataBaseService.insert(uuid, transcription);
-                await InteractionService.speak(answer, outputFile);
-                res.send({name: uuid + '.wav', transcript: transcription});
-            })
-        });
+        if (transcription.toLowerCase().includes("extreme")) {
+            answer = await Weather.extemes(transcription);
+        }
+
+        if (!answer) {
+            answer = "I don't know how to answer this question.";
+        }
+
+        await DataBaseService.insert(uuid, transcription);
+        await InteractionService.speak(answer, outputFile);
+        res.send({ name: uuid + '.wav', transcript: transcription });
     }
 }
