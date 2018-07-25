@@ -56,8 +56,12 @@ export class AudioPipline {
             answer = await SystemMonitor.resources();
         }
 
+        if (transcription.toLowerCase().includes("thank")) {
+          answer = "You are welcome.";
+        }
+
         if (!answer) {
-            answer = "Sorry, I'm afriad I don't know how to answer your question.";
+            answer = "Sorry, I'm afraid I don't know how to answer your question.";
         }
 
         await DataBaseService.insert(uuid, transcription);
