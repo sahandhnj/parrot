@@ -7,3 +7,4 @@ app
 backup
 static/output/*
 data
+static/talkback.wav
