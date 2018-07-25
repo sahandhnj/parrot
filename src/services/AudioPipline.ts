@@ -10,6 +10,7 @@ import { InteractionService } from './InteractionService';
 import { DataBaseService } from './DataBaseService';
 import { Calculator } from './Calculator';
 import { Weather } from './Weather';
+import { SystemMonitor } from './SystemMonitor';
 
 const rawDir = 'media/raw';
 const outputDir = 'static/output';
@@ -47,8 +48,16 @@ export class AudioPipline {
             answer = await Weather.extemes(transcription);
         }
 
+        if (transcription.toLowerCase().includes("truck") || transcription.toLowerCase().includes("trucks")) {
+            answer = await SystemMonitor.trucks()
+        }
+
+        if (transcription.toLowerCase().includes("resource") || transcription.toLowerCase().includes("resources")) {
+            answer = await SystemMonitor.resources();
+        }
+
         if (!answer) {
-            answer = "I don't know how to answer this question.";
+            answer = "Sorry, I'm afriad I don't know how to answer your question.";
         }
 
         await DataBaseService.insert(uuid, transcription);
