@@ -14,8 +14,9 @@ export class NLPService {
         // const ners= nlpresult.nerTags();
         const tokens = nlpresult.tokens();
         const deps = nlpresult._enhancedPlusPlusDependencies;
-        const tokenRelations = NLPService.mapRelations(deps,tokens);
-
+        const governors = nlpresult.governors();
+        const tokenRelations = NLPService.analyse(deps);
+        console.log(JSON.stringify(tokenRelations, null, 2));
         tokens.forEach(el => {
             el._posTag = tags[el._pos]
         });
@@ -52,6 +53,86 @@ export class NLPService {
         });
        // return tokens;
         return tokens.filter(token => token.relations && token.relations.length > 1)
+    }
+
+    static analyse= (deps) =>{
+        let array=[];
+
+        const roots= deps.filter(dep => dep.dep === 'ROOT');
+        if(roots.length !== 1){
+            throw new Error('Wrong number of root');
+        }
+
+        const root = roots[0];
+
+        array.push({dep: 'Root', id: root.dependent, text: root.dependentGloss});
+        
+        const subjects= deps.filter(dep => dep.dep === 'nsubj');
+        if(subjects.length === 1){
+            const subject= subjects[0];
+            array.push({dep: 'nsubj', id: subject.dependent, text: subject.dependentGloss});            
+        }
+
+    
+        const objects= deps.filter(dep => dep.dep === 'iobj' || dep.dep === 'obj' || dep.dep === 'dobj' || dep.dep === 'xcomp');
+        
+        objects.forEach(obj =>{
+            array.push({type:'obj', dep: obj.dep, id: obj.dependent, text: obj.dependentGloss});
+        })
+
+        const cops= deps.filter(dep => dep.dep === 'cop');
+        cops.forEach(cop =>{
+            array.forEach(el =>{
+                if(el.id === cop.governor){
+                    if(!el.relations){
+                        el.relations=[];
+                    }
+
+                    el.relations.push({dep: 'cop', id: cop.dependent, text: cop.dependentGloss})
+                }
+            })
+        })
+
+        const nums= deps.filter(dep => dep.dep === 'nummod');
+        nums.forEach(num =>{
+            array.forEach(el =>{
+                if(el.id === num.governor){
+                    if(!el.relations){
+                        el.relations=[];
+                    }
+
+                    el.relations.push({dep: 'nummod', id: num.dependent, text: num.dependentGloss})
+                }
+            })
+        })
+
+        const adjectives= deps.filter(dep => dep.dep === 'amod');
+        adjectives.forEach(adj =>{
+            array.forEach(el =>{
+                if(el.id === adj.governor){
+                    if(!el.relations){
+                        el.relations=[];
+                    }
+
+                    el.relations.push({dep: 'amod', id: adj.dependent, text: adj.dependentGloss})
+                }
+            })
+        })
+
+        const compounds= deps.filter(dep => dep.dep === 'compound');
+        compounds.forEach(compound =>{
+            array.forEach(el =>{
+                if(el.id === compound.governor){
+                    if(!el.relations){
+                        el.relations=[];
+                    }
+
+                    el.relations.push({dep: 'compound', id: compound.dependent, text: compound.dependentGloss})
+                }
+            })
+        });
+
+        return array;
     }
 
     static getProperNames = (tokens: Array<any>) => {
