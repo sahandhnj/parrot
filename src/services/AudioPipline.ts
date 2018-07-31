@@ -48,44 +48,44 @@ export class AudioPipline {
             answer = await Weather.extemes(transcription);
         }
 
-        if (includePhrase(transcription,['truck','trucks'])) {
+        if (includePhrase(transcription, ['truck', 'trucks'])) {
             answer = await SystemMonitor.trucks()
         }
 
-        if (includePhrase(transcription,['resource','resources'])) {
+        if (includePhrase(transcription, ['resource', 'resources'])) {
             answer = await SystemMonitor.resources();
         }
 
-        if (includePhrase(transcription,['jetty1','jetty 1','jetty one', 'j-1','j1','j 1', 'j one'])) {
+        if (includePhrase(transcription, ['jetty1', 'jetty 1', 'jetty one', 'j-1', 'j1', 'j 1', 'j one'])) {
             answer = await SystemMonitor.jetty1();
         }
 
-        if (includePhrase(transcription,['jetty2','jetty 2','jetty two', 'j-2','j2','j 2', 'j two'])) {
+        if (includePhrase(transcription, ['jetty2', 'jetty 2', 'jetty two', 'j-2', 'j2', 'j 2', 'j two'])) {
             answer = await SystemMonitor.jetty2();
         }
 
-        if (includePhrase(transcription,['pump','pumped','tank'])) {
+        if (includePhrase(transcription, ['pump', 'pumped', 'tank'])) {
             answer = await SystemMonitor.getResourceById(transcription);
         }
 
         if (transcription.toLowerCase().includes("thank")) {
-          answer = "You are welcome.";
+            answer = "You are welcome.";
 
-        if (!answer) {
-            answer = "Sorry, I'm afraid I don't know how to answer your question.";
+            if (!answer) {
+                answer = "Sorry, I'm afraid I don't know how to answer your question.";
+            }
+
+            await DataBaseService.insert(uuid, transcription);
+            await InteractionService.speak(answer, outputFile);
+            res.send({ name: uuid + '.wav', transcript: transcription });
         }
-
-        await DataBaseService.insert(uuid, transcription);
-        await InteractionService.speak(answer, outputFile);
-        res.send({ name: uuid + '.wav', transcript: transcription });
     }
 }
-
 const includePhrase = (text: string, phrases: Array<string>) => {
-    let match= false;
+    let match = false;
 
     phrases.forEach(p => {
-        if(text.toLowerCase().includes(p)){
+        if (text.toLowerCase().includes(p)) {
             match = true;
         }
     })

@@ -19,7 +19,6 @@ export class SystemMonitor {
 
     static jetty1 = async () => {
         let response = await fetch('http://localhost:3730/getJetty1').then(res => res.json());
-        console.log(response);
         let text = response.resources;
 
         return text;

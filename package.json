@@ -24,6 +24,7 @@
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.3",
     "cookie-parser": "^1.4.3",
+    "corenlp": "^1.4.3",
     "cors": "^2.8.4",
     "csurf": "^1.9.0",
     "errorhandler": "^1.5.0",
