@@ -134,13 +134,19 @@ export class NLPService {
         }
 
         const robj= obj;//NLPService.analyseObj(obj);
+        if(!obj){
+            return result;
+        }
 
         if(robj.element){
-            result.object.element= robj.element[0].el;
+            result.object.element= {};
+            result.object.element.field = robj.element[0].el;
             if(robj.element[0].properties){
-                result.object.properties= robj.element[0].properties;
+                result.object.element.properties= robj.element[0].properties;
             }
-            result.object.subAction= robj.dependentDetails.lemma;
+            result.object.subAction= {};
+            result.object.subAction.field= robj.dependentDetails.lemma;
+            result.object.subAction.properties= robj.properties;
         } else {
             result.object.element= robj.dependentDetails.lemma;
             if(robj.properties){
@@ -257,6 +263,10 @@ export class NLPService {
         const determiners = deps.filter(dep => dep.dep === 'det');
         determiners.forEach(determiner => {
             deps.forEach(el => {
+                if(determiner.dependentGloss === 'the'){
+                    return;
+                }
+                
                 if (el.dependent === determiner.governor) {
                     if (!el.relations) {
                         el.relations = [];
