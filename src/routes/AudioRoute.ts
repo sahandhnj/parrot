@@ -18,9 +18,9 @@ export class AudioRoute {
             DataBaseService.select(res);
         });
 
-        router.post('/test', (req: Request, res: Response, next: NextFunction) => {
-            NLPService.parse(req.body.text);
-            return res.send();
+        router.post('/test', async (req: Request, res: Response, next: NextFunction) => {
+            const result= await NLPService.parse(req.body.text);
+            return res.send({result});
         })
     }
 }

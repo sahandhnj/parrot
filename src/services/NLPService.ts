@@ -1,4 +1,5 @@
 import CoreNLP, { Properties, Pipeline } from 'corenlp';
+import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
 
 export class NLPService {
     static parse = async (text) => {
@@ -15,122 +16,402 @@ export class NLPService {
         const tokens = nlpresult.tokens();
         const deps = nlpresult._enhancedPlusPlusDependencies;
         const governors = nlpresult.governors();
-        const tokenRelations = NLPService.analyse(deps);
-        console.log(JSON.stringify(tokenRelations, null, 2));
-        tokens.forEach(el => {
-            el._posTag = tags[el._pos]
-        });
+        const newDeps = NLPService.parseObj(deps, tokens);
 
-        const result = {
-            pnouns: NLPService.getProperNames(tokens),
-            nouns: NLPService.getNames(tokens),
-            verbs: NLPService.getVerbs(tokens),
-            adjectives: NLPService.getAdjective(tokens)
-        }
+        console.log('--------------------\nBreaking down:', text);
+        const newNewDeps = NLPService.mapOneWayRelations(newDeps);
+        const tokenRelations = NLPService.analyse(newNewDeps);
+        const endResult = NLPService.toSearchObj(tokenRelations);
 
-        const allNames = NLPService.getAllNames(tokens);
-        let results = [];
-        allNames.forEach(name => {
-            results.push(NLPService.getRelationsOfTheNoun(name, tokens));
-        })
+        return endResult;
+        // console.log(JSON.stringify(tokenRelations, null, 2));
+        // tokens.forEach(el => {
+        //     el._posTag = tags[el._pos]
+        // });
 
-        return result;
+        // const result = {
+        //     pnouns: NLPService.getProperNames(tokens),
+        //     nouns: NLPService.getNames(tokens),
+        //     verbs: NLPService.getVerbs(tokens),
+        //     adjectives: NLPService.getAdjective(tokens)
+        // }
+
+        // const allNames = NLPService.getAllNames(tokens);
+        // let results = [];
+        // allNames.forEach(name => {
+        //     results.push(NLPService.getRelationsOfTheNoun(name, tokens));
+        // })
     }
 
     static mapRelations = (deps, tokens) => {
         deps.forEach(dep => {
-            if(dep.governor === 0){
+            if (dep.governor === 0) {
                 return;
             }
 
             if (!tokens[dep.governor - 1].relations) {
                 tokens[dep.governor - 1].relations = []
             }
-            
+
             tokens[dep.governor - 1].relations.push(tokens[dep.dependent - 1])
             let cur = tokens[dep.governor - 1];
             console.log(cur)
         });
-       // return tokens;
+        // return tokens;
         return tokens.filter(token => token.relations && token.relations.length > 1)
     }
 
-    static analyse= (deps) =>{
-        let array=[];
+    static analyseObj = (obj) => {
+        if (obj.relations) {
+            obj.relations.forEach(element => {
+                if (!obj[element.relation]) {
+                    obj[element.relation] = [];
+                }
 
-        const roots= deps.filter(dep => dep.dep === 'ROOT');
-        if(roots.length !== 1){
+                obj[element.relation].push({el: element.dependentDetails.lemma, properties: element.property});
+            });
+        }
+
+        return obj;
+    }
+
+    static getRelationText2 = (items) => {
+        let text = '';
+        if (items.relations) {
+            items.relations.forEach((item, idx) => {
+                text += item.dependentGloss;
+                if (item.relations) {
+                    text += `(${NLPService.getRelationText(item)})`;
+                }
+                text += (idx !== items.relations.length - 1 ? ', ' : '');
+            })
+        }
+
+        return text;
+    }
+
+    static parseObj = (deps, tokens) => {
+        var depsCloned = JSON.parse(JSON.stringify(deps));
+
+        depsCloned.forEach(dep => {
+            dep.dependentDetails = {
+                lemma: tokens[dep.dependent - 1]._lemma,
+                ner: tokens[dep.dependent - 1]._ner,
+                pos: tokens[dep.dependent - 1]._pos,
+                posText: tags[tokens[dep.dependent - 1]._pos]
+            }
+
+        })
+
+        return depsCloned;
+    }
+
+    static mapOneWayRelations = (deps) => {
+        console.log('Mapping one way relationships -->');
+        deps = NLPService.compound(deps);
+        deps = NLPService.determiner(deps);
+        deps = NLPService.number(deps);
+        deps = NLPService.adjective(deps);
+        deps = NLPService.nmod(deps);
+
+        return deps;
+    }
+
+    static toSearchObj = (rels) => {
+        let result = {
+            action: null,
+            object: {} as any
+        };
+
+        const action = rels.filter(el => el.type === 'Root');
+        result.action = action[0].dependentDetails.lemma;
+
+        const objs = rels.filter(el => el.type === 'obj');
+        let obj = objs[0];
+        if (objs.length > 1) {
+            const dobjs = rels.filter(el => el.dep === 'dobj');
+            obj = dobjs[0];
+        }
+
+        const robj= obj;//NLPService.analyseObj(obj);
+
+        if(robj.element){
+            result.object.element= robj.element[0].el;
+            if(robj.element[0].properties){
+                result.object.properties= robj.element[0].properties;
+            }
+            result.object.subAction= robj.dependentDetails.lemma;
+        } else {
+            result.object.element= robj.dependentDetails.lemma;
+            if(robj.properties){
+                result.object.properties= robj.properties;
+            }
+        }
+
+        return result;
+    }
+
+    static compound = (deps) => {
+        const compounds = deps.filter(dep => dep.dep === 'compound');
+        compounds.forEach(compound => {
+            deps.forEach(el => {
+                if (el.dependent === compound.governor) {
+                    if (!el.relations) {
+                        el.relations = [];
+                    }
+                    console.log(`${compound.dependentGloss} is compound of ${el.dependentGloss}`);
+                    if (!el.properties) {
+                        el.properties = [];
+                    }
+
+                    el.properties.push(compound.dependentDetails.lemma);
+
+                    el.relations.push({
+                        relation: "property",
+                        dep: compound.dep,
+                        dependent: compound.dependent,
+                        dependentGloss: compound.dependentGloss,
+                        dependentDetails: compound.dependentDetails,
+                        relations: compound.relations
+                    });
+                }
+            })
+        });
+
+        deps = deps.filter(dep => dep.dep !== 'compound');
+
+        const compoundPrts = deps.filter(dep => dep.dep === 'compound:prt');
+        compoundPrts.forEach(compound => {
+            deps.forEach(el => {
+                if (el.dependent === compound.governor) {
+                    if (!el.relations) {
+                        el.relations = [];
+                    }
+                    console.log(`${compound.dependentGloss} is compound:prt of ${el.dependentGloss}`);
+
+                    el.relations.push({
+                        relation: "main",
+                        dep: compound.dep,
+                        dependent: compound.dependent,
+                        dependentGloss: compound.dependentGloss,
+                        dependentDetails: compound.dependentDetails,
+                        relations: compound.relations
+                    });
+                }
+            })
+        });
+
+        deps = deps.filter(dep => dep.dep !== 'compound:prt');
+
+        return deps;
+    }
+
+    static getRelationText = (items) => {
+        let text = '';
+        if (items.relations) {
+            items.relations.forEach((item, idx) => {
+                text += item.dependentGloss;
+                if (item.relations) {
+                    text += `(${NLPService.getRelationText(item)})`;
+                }
+                text += (idx !== items.relations.length - 1 ? ', ' : '');
+            })
+        }
+
+        return text;
+    }
+
+    static number = (deps) => {
+        const numbers = deps.filter(dep => dep.dep === 'nummod');
+        numbers.forEach(number => {
+            deps.forEach(el => {
+                if (el.dependent === number.governor) {
+                    if (!el.relations) {
+                        el.relations = [];
+                    }
+                    console.log(`${number.dependentGloss} is number of ${el.dependentGloss}`);
+                    if (!el.properties) {
+                        el.properties = [];
+                    }
+
+                    el.properties.push(number.dependentDetails.lemma);
+                    
+                    el.relations.push({
+                        relation: "property",
+                        dep: number.dep,
+                        dependent: number.dependent,
+                        dependentGloss: number.dependentGloss,
+                        dependentDetails: number.dependentDetails,
+                        relations: number.relations
+                    });
+                }
+            })
+        });
+
+        deps = deps.filter(dep => dep.dep !== 'nummod');
+
+        return deps;
+    }
+
+    static determiner = (deps) => {
+        const determiners = deps.filter(dep => dep.dep === 'det');
+        determiners.forEach(determiner => {
+            deps.forEach(el => {
+                if (el.dependent === determiner.governor) {
+                    if (!el.relations) {
+                        el.relations = [];
+                    }
+                    console.log(`${determiner.dependentGloss} is determiner of ${el.dependentGloss}`);
+                    if (!el.properties) {
+                        el.properties = [];
+                    }
+
+                    el.properties.push(determiner.dependentDetails.lemma);
+
+                    el.relations.push({
+                        relation: "property",
+                        dep: determiner.dep,
+                        dependent: determiner.dependent,
+                        dependentGloss: determiner.dependentGloss,
+                        dependentDetails: determiner.dependentDetails,
+                        relations: determiner.relations
+                    });
+                }
+            })
+        });
+
+        deps = deps.filter(dep => dep.dep !== 'det');
+
+        return deps;
+    }
+
+    static cop = (deps) => {
+        const cops = deps.filter(dep => dep.dep === 'cop');
+        cops.forEach(cop => {
+            deps.forEach(el => {
+                if (el.dependent === cop.governor) {
+                    if (!el.relations) {
+                        el.relations = [];
+                    }
+                    console.log(`${cop.dependentGloss} is cop of ${el.dependentGloss}`);
+
+                    el.relations.push({
+                        relation: "subAction",
+                        dep: cop.dep,
+                        dependent: cop.dependent,
+                        dependentGloss: cop.dependentGloss,
+                        dependentDetails: cop.dependentDetails,
+                        relations: cop.relations
+                    });
+                }
+            })
+        });
+
+        deps = deps.filter(dep => dep.dep !== 'nummod');
+
+        return deps;
+    }
+
+    static nmod = (deps) => {
+        const nmods = deps.filter(dep => dep.dep.startsWith('nmod'));
+        nmods.forEach(nmod => {
+            deps.forEach(el => {
+                if (el.dependent === nmod.governor) {
+                    if (!el.relations) {
+                        el.relations = [];
+                    }
+                    console.log(`${nmod.dependentGloss} is ${nmod.dep} of ${el.dependentGloss}`);
+                    if (!el.element) {
+                        el.element = [];
+                    }
+
+                    el.element.push({el: nmod.dependentDetails.lemma, properties:nmod.properties });
+
+                    el.relations.push({
+                        relation: "element",
+                        dep: nmod.dep,
+                        dependent: nmod.dependent,
+                        dependentGloss: nmod.dependentGloss,
+                        dependentDetails: nmod.dependentDetails,
+                        relations: nmod.relations,
+                        properties: nmod.properties
+                    });
+                }
+            })
+        });
+
+        deps = deps.filter(dep => !dep.dep.startsWith('nmod'));
+
+        return deps;
+    }
+
+    static adjective = (deps) => {
+        const adjectives = deps.filter(dep => dep.dep === 'amod');
+        adjectives.forEach(adj => {
+            deps.forEach(el => {
+                if (el.dependent === adj.governor) {
+                    if (!el.relations) {
+                        el.relations = [];
+                    }
+
+                    console.log(`${adj.dependentGloss} is adjective of ${el.dependentGloss}`);
+                    if (!el.properties) {
+                        el.properties = [];
+                    }
+
+                    el.properties.push(adj.dependentDetails.lemma);
+
+                    el.relations.push({
+                        relation: "property",
+                        dep: adj.dep,
+                        dependent: adj.dependent,
+                        dependentGloss: adj.dependentGloss,
+                        dependentDetails: adj.dependentDetails,
+                        relations: adj.relations
+                    });
+                }
+            })
+        });
+
+        deps = deps.filter(dep => dep.dep !== 'amod');
+
+        return deps;
+    }
+
+    static analyse = (deps) => {
+        let array = [];
+
+        const roots = deps.filter(dep => dep.dep === 'ROOT');
+        if (roots.length !== 1) {
             throw new Error('Wrong number of root');
         }
 
         const root = roots[0];
 
-        array.push({dep: 'Root', id: root.dependent, text: root.dependentGloss});
-        
-        const subjects= deps.filter(dep => dep.dep === 'nsubj');
-        if(subjects.length === 1){
-            const subject= subjects[0];
-            array.push({dep: 'nsubj', id: subject.dependent, text: subject.dependentGloss});            
+        delete root.governor;
+        delete root.governorGloss;
+        array.push({ type: 'Root', ...root });
+        console.log(`Root: ${root.dependentGloss} (${NLPService.getRelationText(root)}) `);
+
+        const subjects = deps.filter(dep => dep.dep === 'nsubj');
+
+        if (subjects.length === 1) {
+            const subject = subjects[0];
+            delete subject.governor;
+            delete subject.governorGloss;
+            array.push({ type: 'subj', ...subject });
+            console.log(`Subject: ${subject.dependentGloss} (${NLPService.getRelationText(subject)}) `);
         }
 
-    
-        const objects= deps.filter(dep => dep.dep === 'iobj' || dep.dep === 'obj' || dep.dep === 'dobj' || dep.dep === 'xcomp');
-        
-        objects.forEach(obj =>{
-            array.push({type:'obj', dep: obj.dep, id: obj.dependent, text: obj.dependentGloss});
+
+        const objects = deps.filter(dep => dep.dep === 'iobj' || dep.dep === 'obj' || dep.dep === 'dobj' || dep.dep === 'xcomp');
+
+        objects.forEach(obj => {
+            delete obj.governor;
+            delete obj.governorGloss;
+            array.push({ type: 'obj', ...obj });
+            console.log(`Object (${obj.dep}): ${obj.dependentGloss} (${NLPService.getRelationText(obj)})`);
         })
-
-        const cops= deps.filter(dep => dep.dep === 'cop');
-        cops.forEach(cop =>{
-            array.forEach(el =>{
-                if(el.id === cop.governor){
-                    if(!el.relations){
-                        el.relations=[];
-                    }
-
-                    el.relations.push({dep: 'cop', id: cop.dependent, text: cop.dependentGloss})
-                }
-            })
-        })
-
-        const nums= deps.filter(dep => dep.dep === 'nummod');
-        nums.forEach(num =>{
-            array.forEach(el =>{
-                if(el.id === num.governor){
-                    if(!el.relations){
-                        el.relations=[];
-                    }
-
-                    el.relations.push({dep: 'nummod', id: num.dependent, text: num.dependentGloss})
-                }
-            })
-        })
-
-        const adjectives= deps.filter(dep => dep.dep === 'amod');
-        adjectives.forEach(adj =>{
-            array.forEach(el =>{
-                if(el.id === adj.governor){
-                    if(!el.relations){
-                        el.relations=[];
-                    }
-
-                    el.relations.push({dep: 'amod', id: adj.dependent, text: adj.dependentGloss})
-                }
-            })
-        })
-
-        const compounds= deps.filter(dep => dep.dep === 'compound');
-        compounds.forEach(compound =>{
-            array.forEach(el =>{
-                if(el.id === compound.governor){
-                    if(!el.relations){
-                        el.relations=[];
-                    }
-
-                    el.relations.push({dep: 'compound', id: compound.dependent, text: compound.dependentGloss})
-                }
-            })
-        });
 
         return array;
     }
@@ -232,5 +513,25 @@ let tags = {
     'WDT': 'Wh­determiner',
     'WP': 'Wh­pronoun',
     'WP$': 'Possessive wh­pronoun',
-    'WRB': 'Wh­adverb'
+    'WRB': 'Wh­adverb',
+
+
+
+    'ADJP': 'Adjective phrase',
+    'ADVP': 'Adverb phrase',
+    'NP': 'Noun phrase',
+    'PP': 'Prepositional phrase',
+    'S': 'Simple declarative clause',
+    'SBAR': 'Subordinate clause',
+    'SBARQ': 'Direct question introduced by wh-element',
+    'SINV': 'Declarative sentence with subject-aux inversion',
+    'SQ': 'Yes/no questions and subconstituent of SBARQ excluding wh-element',
+    'VP': 'Verb phrase',
+    'WHADVP': 'Wh-adverb phrase',
+    'WHNP': 'Wh-noun phrase',
+    'WHPP': 'Wh-prepositional phrase',
+    'X': 'Constituent of unknown or uncertain category',
+    '*': '“Understood” subject of infinitive or imperative',
+    '0': 'Zero variant of that in subordinate clauses',
+    'T': 'Trace of wh-Constituen'
 }
