@@ -38,8 +38,27 @@ export class Node {
         return this._type;
     }
 
-    public setText(text: string) {
+    public setTextRoot(text: string) {
         return this._text = text;
+    }
+
+    public setText() {
+        if (this.children() && this.children().length > 0) {
+            this._text = '';
+
+            this.children().forEach((child, idx) => {
+                this._text += child.type() === TYPES.REL ?
+                    child.text() :
+                    child.word();
+
+                if (idx < this.children().length - 1 &&
+                    ['.', ','].indexOf(this.children()[idx + 1].word()) < 0) {
+
+                    this._text += ' ';
+                }
+            })
+
+        }
     }
 
     public pos() {
@@ -99,7 +118,8 @@ export class Node {
         let json = {
             pos: this._pos,
             posInfo: this._posInfo,
-            type: this._type
+            type: this._type,
+            text: this._text,
         } as any;
 
         if (this.children() && this.children().length > 0) {
@@ -116,13 +136,13 @@ export class Node {
         }
     }
 
-    public parseToken(token){
-        let tokenParsed= {
+    public parseToken(token) {
+        let tokenParsed = {
             idx: token.index(),
             lemma: token.lemma()
         } as any;
 
-        if(token.ner !== '0'){
+        if (token.ner() != 'O') {
             tokenParsed.ner = token.ner();
         }
 

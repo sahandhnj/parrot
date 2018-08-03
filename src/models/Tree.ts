@@ -71,7 +71,7 @@ export class Tree {
 
         const tree = Tree.fromString(treeString, linkToParent);
 
-        tree.rootNode.setText(nlpResult.text());
+        tree.rootNode.setTextRoot(nlpResult.text());
 
         let visitedNodes = 0;
         tree.visitWordNodes(node => node.token(nlpResult.token(visitedNodes++)));
@@ -81,6 +81,8 @@ export class Tree {
         if (languageIso) {
             tree.doDFS(node => node.setLanguageISO(languageIso));
         }
+
+        tree.doDFS(node => node.setText());
 
         return tree;
     }
