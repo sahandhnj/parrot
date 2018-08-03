@@ -22,7 +22,7 @@ export class Tree {
     public dumpToFile(filePath?) {
         if (!filePath) {
             // Random uuid -${Math.floor(Math.random() * 100) + 1}
-            filePath = `media/nlpTrees/${this.rootNode.text().substring(0, 10).replace(/ /g, '-')}.json`
+            filePath = `media/nlpTrees/${this.rootNode.text().substring(0, 10).replace(/ /g, '-')}-${Math.floor(Math.random() * 100) + 1}.json`
         }
 
         return fs.writeFileSync(filePath, this.dump());
