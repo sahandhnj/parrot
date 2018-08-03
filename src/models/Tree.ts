@@ -1,0 +1,147 @@
+import { Node } from "./Node";
+import * as fs from "fs";
+
+export class Tree {
+    private rootNode: Node;
+
+    constructor(node: Node) {
+        this.rootNode = node;
+    }
+
+    public dump() {
+        return JSON.stringify(this.rootNode, (key, node) => {
+            
+            if (node instanceof Node) {
+                return node.toJSON();
+            }
+
+            return node;
+        }, 2);
+    }
+
+    public dumpToFile(filePath?) {
+        if (!filePath) {
+            // Random uuid -${Math.floor(Math.random() * 100) + 1}
+            filePath = `media/nlpTrees/${this.rootNode.text().substring(0, 10).replace(/ /g, '-')}.json`
+        }
+
+        return fs.writeFileSync(filePath, this.dump());
+    }
+
+    //Depth-first_search|DFS left to right (cb on all nodes)
+    private doDFS(cb, node: Node = this.rootNode) {
+        node.children().forEach(childNode => {
+            this.doDFS(cb, childNode);
+            cb(childNode);
+        });
+
+        cb(node);
+    }
+
+    //Depth-first_search|DFS right to left (cb on all nodes)
+    private doDFSRight(cb, node: Node = this.rootNode) {
+        node.children().reverse().forEach(childNode => {
+            this.doDFSRight(cb, childNode);
+            cb(childNode);
+        });
+
+        cb(node);
+    }
+
+    //Depth-first_search|DFS (cb on all nodes with no children (actuall words not relations))
+    private visitWordNodes(cb, node: Node = this.rootNode) {
+        node.children().forEach(childNode => {
+            if (childNode.children().length) {
+                this.visitWordNodes(cb, childNode);
+            } else {
+                cb(childNode);
+            }
+        });
+
+        if (!node.children() || !node.children().length) {
+            cb(node);
+        }
+    }
+
+    public static newTreeFromString(nlpResult, linkToParent = false) {
+        const treeString = nlpResult.parse();
+        if (!treeString) {
+            throw new Error('Missing tree in text format');
+        }
+
+        const tree = Tree.fromString(treeString, linkToParent);
+
+        tree.rootNode.setText(nlpResult.text());
+
+        let visitedNodes = 0;
+        tree.visitWordNodes(node => node.token(nlpResult.token(visitedNodes++)));
+
+        //Set language on the first parent NODE
+        const languageIso = nlpResult.getLanguageISO();
+        if (languageIso) {
+            tree.doDFS(node => node.setLanguageISO(languageIso));
+        }
+
+        return tree;
+    }
+
+    private static fromString(str, linkToParent = false) {
+        return new Tree(this._transformTree(this._buildTree(str), linkToParent));
+    }
+
+    private static _buildTree(str) {
+        let currentNode: { str?, children } = { children: [] };
+        const openNodes = [currentNode];
+        const l = str.length;
+
+        for (let i = 0; i < l; i++) {
+            if (str[i] === '(') {
+                currentNode = { str: '', children: [] };
+
+                openNodes[openNodes.length - 1].children.push(currentNode);
+                openNodes.push(currentNode);
+
+            } else if (str[i] === ')') {
+                this._cleanNode(currentNode);
+
+                openNodes.pop();
+                currentNode = openNodes[openNodes.length - 1];
+
+            } else {
+                currentNode.str += str[i];
+            }
+        }
+
+        return currentNode.children[0];
+    }
+
+    private static _cleanNode(node) {
+        const str = node.str.trim();
+        const delimiterPos = str.indexOf(' ');
+
+        if (delimiterPos > -1) {
+            node.pos = str.substr(0, delimiterPos);
+            node.word = str.substr(delimiterPos + 1);
+
+        } else {
+            node.pos = str;
+        }
+    }
+
+    private static _transformTree(node, linkToParent?) {
+        if (linkToParent) {
+            const parentNode = new Node(node.pos, node.word);
+
+            node.children.forEach(n => {
+                const childNode = this._transformTree(n, linkToParent);
+
+                childNode.parent(parentNode);
+                parentNode.appendChild(childNode);
+            });
+
+            return parentNode;
+        }
+
+        return new Node(node.pos, node.word, node.children.map(n => this._transformTree(n)));
+    }
+}

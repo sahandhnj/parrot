@@ -1,0 +1,191 @@
+const TYPES = {
+    REL: 'relation',
+    WORD: 'word'
+};
+
+export class Node {
+    private _text: string;
+    private _type: string;
+    private _pos: string;
+    private _posInfo: string;
+    private _word: string;
+    private _children: Array<Node>;
+    private _parent: Node;
+    private _token: Array<any>;
+    private _language: string;
+
+    constructor(pos: string = '', word: string, children: Array<Node> = [], parent: Node = null) {
+        this._pos = pos;
+
+        if (word) {
+            this._word = word;
+            this._type = TYPES.WORD;
+        } else {
+            this._type = TYPES.REL;
+        }
+
+        this._children = children;
+        this._parent = parent;
+
+        this.setPosInfo(pos);
+    }
+
+    public text() {
+        return this._text;
+    }
+
+    public type() {
+        return this._type;
+    }
+
+    public setText(text: string) {
+        return this._text = text;
+    }
+
+    public pos() {
+        return this._pos;
+    }
+
+    public posInfo() {
+        return this._posInfo;
+    }
+
+    private setPosInfo(pos: string) {
+        if (this._children && this._children.length > 0 && REL[pos]) {
+            this._posInfo = REL[pos]
+        }
+        else if (POS[pos]) {
+            this._posInfo = POS[pos];
+        }
+    }
+
+    public token(token = null) {
+        if (token) {
+            this._token = token;
+        }
+
+        return this._token;
+    }
+
+    public word() {
+        return this._word;
+    }
+
+    public setLanguageISO(iso) {
+        this._language = iso;
+    }
+
+    public getLanguageISO() {
+        return this._language;
+    }
+
+    public children() {
+        return this._children;
+    }
+
+    public appendChild(node) {
+        this._children.push(node);
+    }
+
+    public parent(paren = null) {
+        if (paren) {
+            this._parent = paren;
+        }
+
+        return this._parent;
+    }
+
+    public toJSON() {
+        let json = {
+            pos: this._pos,
+            posInfo: this._posInfo,
+            type: this._type
+        } as any;
+
+        if (this.children() && this.children().length > 0) {
+            return {
+                ...json,
+                children: this.children()
+            }
+        }
+
+        return {
+            ...json,
+            word: this.word(),
+            token: this.parseToken(this.token())
+        }
+    }
+
+    public parseToken(token){
+        let tokenParsed= {
+            idx: token.index(),
+            lemma: token.lemma()
+        } as any;
+
+        if(token.ner !== '0'){
+            tokenParsed.ner = token.ner();
+        }
+
+        return tokenParsed;
+    }
+}
+
+
+const POS = {
+    'CC': 'Coordinating conjunction',
+    'CD': 'Cardinal number',
+    'DT': 'Determiner',
+    'EX': 'Existential there',
+    'FW': 'Foreign word',
+    'IN': 'Preposition or subordinating conjunction',
+    'JJ': 'Adjective',
+    'JJR': 'Adjective, comparative',
+    'JJS': 'Adjective, superlative',
+    'LS': 'List item marker',
+    'MD': 'Modal',
+    'NN': 'Noun, singular or mass',
+    'NNS': 'Noun, plural',
+    'NNP': 'Proper noun, singular',
+    'NNPS': 'Proper noun, plural',
+    'PDT': 'Predeterminer',
+    'POS': 'Possessive ending',
+    'PRP': 'Personal pronoun',
+    'PRP$': 'Possessive pronoun',
+    'RB': 'Adverb',
+    'RBR': 'Adverb, comparative',
+    'RBS': 'Adverb, superlative',
+    'RP': 'Particle',
+    'SYM': 'Symbol',
+    'TO': 'to',
+    'UH': 'Interjection',
+    'VB': 'Verb, base form',
+    'VBD': 'Verb, past tense',
+    'VBG': 'Verb, gerund or present participle',
+    'VBN': 'Verb, past participle',
+    'VBP': 'Verb, non­3rd person singular present',
+    'VBZ': 'Verb, 3rd person singular present',
+    'WDT': 'Wh­determiner',
+    'WP': 'Wh­pronoun',
+    'WP$': 'Possessive wh­pronoun',
+    'WRB': 'Wh­adverb',
+}
+
+const REL = {
+    'ADJP': 'Adjective phrase',
+    'ADVP': 'Adverb phrase',
+    'NP': 'Noun phrase',
+    'PP': 'Prepositional phrase',
+    'S': 'Simple declarative clause',
+    'SBAR': 'Subordinate clause',
+    'SBARQ': 'Direct question introduced by wh-element',
+    'SINV': 'Declarative sentence with subject-aux inversion',
+    'SQ': 'Yes/no questions and subconstituent of SBARQ excluding wh-element',
+    'VP': 'Verb phrase',
+    'WHADVP': 'Wh-adverb phrase',
+    'WHNP': 'Wh-noun phrase',
+    'WHPP': 'Wh-prepositional phrase',
+    'X': 'Constituent of unknown or uncertain category',
+    '*': '“Understood” subject of infinitive or imperative',
+    '0': 'Zero variant of that in subordinate clauses',
+    'T': 'Trace of wh-Constituen'
+}

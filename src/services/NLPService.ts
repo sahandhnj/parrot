@@ -1,5 +1,6 @@
 import CoreNLP, { Properties, Pipeline } from 'corenlp';
 import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
+import { Tree } from '../models/Tree';
 
 export class NLPService {
     static parse = async (text) => {
@@ -9,10 +10,11 @@ export class NLPService {
 
         const sent = new CoreNLP.simple.Sentence(text);
         const nlpresult = await pipeline.annotate(sent)
-        // const dump = CoreNLP.util.Tree.fromSentence(nlpresult).dump();
-        // const parsed = nlpresult.parse();
-        // const words= nlpresult.words();
-        // const ners= nlpresult.nerTags();
+
+        const tree: Tree = Tree.newTreeFromString(nlpresult);
+       
+        tree.dumpToFile();
+
         const tokens = nlpresult.tokens();
         const deps = nlpresult._enhancedPlusPlusDependencies;
         const governors = nlpresult.governors();
@@ -24,23 +26,6 @@ export class NLPService {
         const endResult = NLPService.toSearchObj(tokenRelations);
 
         return endResult;
-        // console.log(JSON.stringify(tokenRelations, null, 2));
-        // tokens.forEach(el => {
-        //     el._posTag = tags[el._pos]
-        // });
-
-        // const result = {
-        //     pnouns: NLPService.getProperNames(tokens),
-        //     nouns: NLPService.getNames(tokens),
-        //     verbs: NLPService.getVerbs(tokens),
-        //     adjectives: NLPService.getAdjective(tokens)
-        // }
-
-        // const allNames = NLPService.getAllNames(tokens);
-        // let results = [];
-        // allNames.forEach(name => {
-        //     results.push(NLPService.getRelationsOfTheNoun(name, tokens));
-        // })
     }
 
     static mapRelations = (deps, tokens) => {
@@ -68,7 +53,7 @@ export class NLPService {
                     obj[element.relation] = [];
                 }
 
-                obj[element.relation].push({el: element.dependentDetails.lemma, properties: element.property});
+                obj[element.relation].push({ el: element.dependentDetails.lemma, properties: element.property });
             });
         }
 
@@ -133,24 +118,24 @@ export class NLPService {
             obj = dobjs[0];
         }
 
-        const robj= obj;//NLPService.analyseObj(obj);
-        if(!obj){
+        const robj = obj;//NLPService.analyseObj(obj);
+        if (!obj) {
             return result;
         }
 
-        if(robj.element){
-            result.object.element= {};
+        if (robj.element) {
+            result.object.element = {};
             result.object.element.field = robj.element[0].el;
-            if(robj.element[0].properties){
-                result.object.element.properties= robj.element[0].properties;
+            if (robj.element[0].properties) {
+                result.object.element.properties = robj.element[0].properties;
             }
-            result.object.subAction= {};
-            result.object.subAction.field= robj.dependentDetails.lemma;
-            result.object.subAction.properties= robj.properties;
+            result.object.subAction = {};
+            result.object.subAction.field = robj.dependentDetails.lemma;
+            result.object.subAction.properties = robj.properties;
         } else {
-            result.object.element= robj.dependentDetails.lemma;
-            if(robj.properties){
-                result.object.properties= robj.properties;
+            result.object.element = robj.dependentDetails.lemma;
+            if (robj.properties) {
+                result.object.properties = robj.properties;
             }
         }
 
@@ -241,7 +226,7 @@ export class NLPService {
                     }
 
                     el.properties.push(number.dependentDetails.lemma);
-                    
+
                     el.relations.push({
                         relation: "property",
                         dep: number.dep,
@@ -263,10 +248,10 @@ export class NLPService {
         const determiners = deps.filter(dep => dep.dep === 'det');
         determiners.forEach(determiner => {
             deps.forEach(el => {
-                if(determiner.dependentGloss === 'the'){
+                if (determiner.dependentGloss === 'the') {
                     return;
                 }
-                
+
                 if (el.dependent === determiner.governor) {
                     if (!el.relations) {
                         el.relations = [];
@@ -335,7 +320,7 @@ export class NLPService {
                         el.element = [];
                     }
 
-                    el.element.push({el: nmod.dependentDetails.lemma, properties:nmod.properties });
+                    el.element.push({ el: nmod.dependentDetails.lemma, properties: nmod.properties });
 
                     el.relations.push({
                         relation: "element",
