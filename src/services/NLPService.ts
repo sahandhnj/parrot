@@ -12,17 +12,17 @@ export class NLPService {
         const sent = new CoreNLP.simple.Sentence(text);
         const nlpresult = await pipeline.annotate(sent)
 
-        const tree: Tree = Tree.newTreeFromString(nlpresult);
-       
-        tree.dumpToFile();
+        
 
         const tokens = nlpresult.tokens();
         const deps = nlpresult._enhancedPlusPlusDependencies;
         const governors = nlpresult.governors();
         const newDeps = NLPService.parseObj(deps, tokens);
         const ners= TreeService.mergeNERs(tokens);
-        TreeService.mergeTreeNERs(ners,tree);
         
+        const tree: Tree = Tree.newTreeFromString(nlpresult);
+        tree.dumpToFile();
+
         console.log('--------------------\nBreaking down:', text);
         const newNewDeps = NLPService.mapOneWayRelations(newDeps);
         const tokenRelations = NLPService.analyse(newNewDeps);

@@ -4,6 +4,7 @@ import './style/App.css';
 import WaveStream from 'react-wave-stream';
 import Recorder from './service/recorder';
 import RecordBtn from './container/recordBtn';
+import RecordAnimation from './container/recordAnimation';
 
 class App extends Component {
 	constructor(...props) {

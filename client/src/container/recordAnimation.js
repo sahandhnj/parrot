@@ -17,8 +17,8 @@ canvas.width = innerWidth;
 canvas.height = innerHeight;
 
 
-cx = canvas.width / 2;
-cy = canvas.height / 2;
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
 
 var blueprint = [
     { x: cx, y: cy, radius: 200, startAngle: 0, endAngle: 360, length: 360, speed: 0, color: "#f8f8ff", lw: 10, ccw: false },

@@ -1,4 +1,4 @@
-import { Node } from "./Node";
+import { Node, NODE_TYPES } from "./Node";
 import * as fs from "fs";
 
 export class Tree {
@@ -22,7 +22,7 @@ export class Tree {
     public dumpToFile(filePath?) {
         if (!filePath) {
             // Random uuid -${Math.floor(Math.random() * 100) + 1}
-            filePath = `media/nlpTrees/${this.rootNode.text().substring(0, 10).replace(/ /g, '-')}-${Math.floor(Math.random() * 100) + 1}.json`
+            filePath = `media/nlpTrees/${this.rootNode.text().substring(0, 10).replace(/ /g, '-')}.json`
         }
 
         return fs.writeFileSync(filePath, this.dump());
@@ -67,13 +67,46 @@ export class Tree {
         }
     }
 
-    public mergeChildren(mergeCB){
-        this.visitWordNodes(node => {
-            console.log(node.children());
-            if(node.children().length){
-                mergeCB(node);
+    public mergeChildrenToParent(decide: (a:Node) => boolean){
+        this.doDFS(node => {
+
+            if(node.type() === NODE_TYPES.REL && node.children().length){
+                if(decide(node)){
+                    let child= node.children()[0];
+                    child.setWord(node.text());
+                    node.setChildren([child]);
+                }
             }
         });
+    }
+
+    public mergeTreeNERs(){
+        console.log('Merge NERS children');
+        const decide= node =>{
+            let ner;
+            let requiresMerging= true;
+
+            node.children().forEach((child,idx) =>{
+                if(idx === 0){
+                    ner= child.ner();
+                }
+
+                if(!ner || ner === 'O'){
+                    requiresMerging= false;
+                    return;
+                }
+
+                console.log('-------->',child.word() , ner);
+                if(child.ner() !== ner){
+                    requiresMerging= false;
+                }
+            })
+
+            return requiresMerging;
+        };
+
+        this.mergeChildrenToParent(decide);
+        console.log('--------------------');
     }
 
     public static newTreeFromString(nlpResult, linkToParent = false) {
@@ -96,6 +129,7 @@ export class Tree {
         }
 
         tree.doDFS(node => node.setText());
+        tree.mergeTreeNERs();
         tree.doDFS(node => node.setStructure());
 
         return tree;

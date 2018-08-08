@@ -19,8 +19,13 @@ export class AudioRoute {
         });
 
         router.post('/test', async (req: Request, res: Response, next: NextFunction) => {
-            const result= await NLPService.parse(req.body.text);
-            return res.send({result});
+            try{
+                const result= await NLPService.parse(req.body.text);
+                return res.send({result});
+            } catch(e){
+                console.log(e);
+            }
+            
         })
     }
 }
