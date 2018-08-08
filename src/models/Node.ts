@@ -13,6 +13,7 @@ export class Node {
     private _parent: Node;
     private _token: Array<any>;
     private _language: string;
+    private _structure: Array<any>;
 
     constructor(pos: string = '', word: string, children: Array<Node> = [], parent: Node = null) {
         this._pos = pos;
@@ -38,6 +39,10 @@ export class Node {
         return this._type;
     }
 
+    public structure() {
+        return this._structure;
+    }
+
     public setTextRoot(text: string) {
         return this._text = text;
     }
@@ -55,6 +60,23 @@ export class Node {
                     ['.', ','].indexOf(this.children()[idx + 1].word()) < 0) {
 
                     this._text += ' ';
+                }
+            })
+
+        }
+    }
+
+    public setStructure() {
+        if (this._type === TYPES.REL && this.children() && this.children().length > 0) {
+            this._structure = [];
+
+            this.children().forEach((child, idx) => {
+                if (child.type() === TYPES.REL) {
+                    this._structure.push(child.structure())
+                }
+
+                if (child.type() === TYPES.WORD) {
+                    this._structure.push(child.pos())
                 }
             })
 
@@ -121,6 +143,13 @@ export class Node {
             type: this._type,
             text: this._text,
         } as any;
+
+        if (this._pos === 'ROOT') {
+            json = {
+                ...json,
+                structure: this._structure,
+            }
+        }
 
         if (this.children() && this.children().length > 0) {
             return {

@@ -1,6 +1,7 @@
 import CoreNLP, { Properties, Pipeline } from 'corenlp';
 import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
 import { Tree } from '../models/Tree';
+import { TreeService } from './TreeService';
 
 export class NLPService {
     static parse = async (text) => {
@@ -19,7 +20,9 @@ export class NLPService {
         const deps = nlpresult._enhancedPlusPlusDependencies;
         const governors = nlpresult.governors();
         const newDeps = NLPService.parseObj(deps, tokens);
-
+        const ners= TreeService.mergeNERs(tokens);
+        TreeService.mergeTreeNERs(ners,tree);
+        
         console.log('--------------------\nBreaking down:', text);
         const newNewDeps = NLPService.mapOneWayRelations(newDeps);
         const tokenRelations = NLPService.analyse(newNewDeps);

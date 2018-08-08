@@ -28,6 +28,10 @@ export class Tree {
         return fs.writeFileSync(filePath, this.dump());
     }
 
+    public getMainSentences() {
+       
+    }
+
     //Depth-first_search|DFS left to right (cb on all nodes)
     private doDFS(cb, node: Node = this.rootNode) {
         node.children().forEach(childNode => {
@@ -63,6 +67,15 @@ export class Tree {
         }
     }
 
+    public mergeChildren(mergeCB){
+        this.visitWordNodes(node => {
+            console.log(node.children());
+            if(node.children().length){
+                mergeCB(node);
+            }
+        });
+    }
+
     public static newTreeFromString(nlpResult, linkToParent = false) {
         const treeString = nlpResult.parse();
         if (!treeString) {
@@ -83,6 +96,7 @@ export class Tree {
         }
 
         tree.doDFS(node => node.setText());
+        tree.doDFS(node => node.setStructure());
 
         return tree;
     }
