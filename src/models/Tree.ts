@@ -25,6 +25,7 @@ export class Tree {
             // Random uuid -${Math.floor(Math.random() * 100) + 1}
             filePath = `media/nlpTrees/${this.rootNode.text().substring(0, 10).replace(/ /g, '-')}.json`
         }
+        console.log('Saving to ',filePath);
 
         return fs.writeFileSync(filePath, this.dump());
     }

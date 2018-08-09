@@ -4,6 +4,7 @@ import * as path from 'path';
 import { AudioPipline } from '../services/AudioPipline';
 import { DataBaseService } from '../services/DataBaseService';
 import { NLPService } from '../services/NLPService';
+import { Guru } from '../services/Guru';
 
 export class AudioRoute {
     constructor() {
@@ -19,13 +20,33 @@ export class AudioRoute {
         });
 
         router.post('/test', async (req: Request, res: Response, next: NextFunction) => {
-            try{
-                const result= await NLPService.parse(req.body.text);
-                return res.send({result});
-            } catch(e){
+            try {
+                const result = await NLPService.parse(req.body.text);
+                return res.send({ result });
+            } catch (e) {
                 console.log(e);
             }
-            
+
+        })
+
+        router.post('/test2', async (req: Request, res: Response, next: NextFunction) => {
+            try {
+                const result = await Guru.do(req.body.text,req.body.phrase);
+                return res.send({ result });
+            } catch (e) {
+                console.log(e);
+            }
+
+        })
+
+        router.post('/test3', async (req: Request, res: Response, next: NextFunction) => {
+            try {
+                const result = await Guru.getMeOptions(req.body.text);
+                return res.send({ result });
+            } catch (e) {
+                console.log(e);
+            }
+
         })
     }
 }

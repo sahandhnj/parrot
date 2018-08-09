@@ -3,6 +3,7 @@ import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
 import { Tree } from '../models/Tree';
 import { TreeService } from './TreeService';
 import { Convertor } from './Convertor';
+import { Guru } from './Guru';
 
 export class NLPService {
     static parse = async (text, uuid?) => {
@@ -26,8 +27,14 @@ export class NLPService {
         let endResult;
         if (tree.treeType() === 'WHAT_IS') {
             endResult = NLPService.doWhatIs(tree);
-            if(endResult.mode === 'convertor'){
+            console.log(endResult);
+            if(endResult && endResult.mode === 'convertor'){
                 return Convertor.parseConversionObj(endResult);
+            }
+            
+            if(endResult && endResult.mode === 'guru'){
+                let answer= await Guru.parseGuruObj(endResult);
+                return answer;
             }
         }
     }
@@ -39,6 +46,12 @@ export class NLPService {
         
         if (hasIn) {
             return hasIn;
+        }
+
+        let hasOf = NLPService.checkForHasOf(whatis);
+        
+        if (hasOf) {
+            return hasOf;
         }
     }
 
@@ -123,6 +136,38 @@ export class NLPService {
         } as any;
 
         return endResult;
+    }
+
+    static checkForHasOf = (words) => {
+        let result;
+        let clonedArr = words.slice(0);
+        let index = clonedArr.indexOf('IN: of');
+
+        if (index < 0) {
+            return;
+        }
+
+        let main = clonedArr.splice(index, clonedArr.length - index);
+        let property = clonedArr;
+
+        main.splice(0, 1);
+        main.forEach((b, i) => {
+            b = b.substring(b.indexOf(': ') + 2, b.length - b.indexOf(': ') + 3);
+            main[i] = b;
+        })
+        main = main.join(' ');
+
+        property.forEach((f, i) => {
+            f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+            property[i] = f;
+        })
+
+        property = property.join(' ');
+        property = property.replace('the','');
+        property = property.trim();
+        let mode = 'guru';
+
+        return {property, main, mode};
     }
 
     static mapRelations = (deps, tokens) => {
