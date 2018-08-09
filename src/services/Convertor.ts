@@ -24,8 +24,6 @@ export class Convertor {
         let from = obj.from.object;
         let amount = obj.from.number;
 
-        console.log(obj);
-
         let posibilites = convert().from(from.abbr).possibilities();
         let err;
 

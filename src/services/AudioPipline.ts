@@ -15,6 +15,8 @@ import { NLPService } from './NLPService';
 
 const rawDir = 'media/raw';
 const outputDir = 'static/output';
+const nlpTreeDir = 'media/nlpTrees';
+
 export class AudioPipline {
     public static pipeIt = async (res, req) => {
         if (!req.files.audio || !req.files.audio.data) {
@@ -25,6 +27,7 @@ export class AudioPipline {
         const uuid = uuidv4();
         const rawFile = path.join(rawDir, uuid + '.wav');
         const outputFile = path.join(outputDir, uuid + '.wav');
+        const nlpTreeFile = path.join(nlpTreeDir, uuid + '.json');
 
         let binaryArray = new Uint8Array(req.files.audio.data);
         await fsp.writeFileAsync(rawFile, new Buffer(binaryArray as any));
@@ -73,7 +76,7 @@ export class AudioPipline {
             answer = "You are welcome.";
         }
 
-        answer= await NLPService.parse(transcription);
+        answer= await NLPService.parse(transcription,nlpTreeFile);
 
         if (!answer) {
             answer = "Sorry, I'm afraid I don't know how to answer your question.";

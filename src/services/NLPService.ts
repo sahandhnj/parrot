@@ -5,7 +5,7 @@ import { TreeService } from './TreeService';
 import { Convertor } from './Convertor';
 
 export class NLPService {
-    static parse = async (text) => {
+    static parse = async (text, uuid?) => {
         const pipeline = new Pipeline(new Properties({
             annotators: 'tokenize,ssplit,pos,lemma,ner,parse',
         }), 'English');
@@ -21,7 +21,7 @@ export class NLPService {
         // const ners = TreeService.mergeNERs(tokens);
 
         const tree: Tree = Tree.newTreeFromString(nlpresult);
-        tree.dumpToFile();
+        tree.dumpToFile(uuid);
         
         let endResult;
         if (tree.treeType() === 'WHAT_IS') {
