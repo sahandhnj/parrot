@@ -1,5 +1,6 @@
 import { Node, NODE_TYPES } from "./Node";
 import * as fs from "fs";
+import { Blob } from "node-fetch";
 
 export class Tree {
     private rootNode: Node;
@@ -10,7 +11,7 @@ export class Tree {
 
     public dump() {
         return JSON.stringify(this.rootNode, (key, node) => {
-            
+
             if (node instanceof Node) {
                 return node.toJSON();
             }
@@ -29,7 +30,7 @@ export class Tree {
     }
 
     public getMainSentences() {
-       
+
     }
 
     //Depth-first_search|DFS left to right (cb on all nodes)
@@ -67,38 +68,49 @@ export class Tree {
         }
     }
 
-    public mergeChildrenToParent(decide: (a:Node) => boolean){
+    private visitRelsTopToBottom(cb, node: Node = this.rootNode) {
+        node.children().forEach(childNode => {
+            cb(childNode);
+            this.visitRelsTopToBottom(cb, childNode);
+        });
+    }
+
+    public mergeChildrenToParent(decide: (a: Node) => boolean) {
         this.doDFS(node => {
 
-            if(node.type() === NODE_TYPES.REL && node.children().length){
-                if(decide(node)){
-                    let child= node.children()[0];
+            if (node.type() === NODE_TYPES.REL && node.children().length) {
+                if (decide(node)) {
+                    let child = node.children()[0];
+
                     child.setWord(node.text());
+                    child.cleanLemma();
+                    child.setPosToNE();
+
                     node.setChildren([child]);
                 }
             }
         });
     }
 
-    public mergeTreeNERs(){
+    public mergeTreeNERs() {
         console.log('Merge NERS children');
-        const decide= node =>{
+        const decide = node => {
             let ner;
-            let requiresMerging= true;
+            let requiresMerging = true;
 
-            node.children().forEach((child,idx) =>{
-                if(idx === 0){
-                    ner= child.ner();
+            node.children().forEach((child, idx) => {
+                if (idx === 0) {
+                    ner = child.ner();
                 }
 
-                if(!ner || ner === 'O'){
-                    requiresMerging= false;
+                if (!ner || ner === 'O') {
+                    requiresMerging = false;
                     return;
                 }
 
-                console.log('-------->',child.word() , ner);
-                if(child.ner() !== ner){
-                    requiresMerging= false;
+                console.log('-------->', child.word(), ner);
+                if (child.ner() !== ner) {
+                    requiresMerging = false;
                 }
             })
 
@@ -107,6 +119,50 @@ export class Tree {
 
         this.mergeChildrenToParent(decide);
         console.log('--------------------');
+    }
+
+    public setFlatRels() {
+        let allRelsFlat = [];
+        this.visitRelsTopToBottom((node) => {
+
+            if (node.type() === NODE_TYPES.REL) {
+                allRelsFlat.push(node.pos());
+            }
+        }, this.rootNode);
+
+        this.rootNode.setRelsFlat(allRelsFlat);
+    }
+
+    public tagTree() {
+        const cmpArrays = (a: Array<any>, b: Array<any>) => {
+            let eq = true;
+
+            a.forEach((val, idx) => {
+                if (val !== b[idx]) {
+                    eq = false;
+                }
+            });
+
+            return eq;
+        }
+
+        let WH = ["SBARQ", "WHNP", "SQ"];
+
+        if (cmpArrays(WH, this.rootNode.relsFlat())) {
+            let treeStructure = this.treeStructure();
+            if (treeStructure[1][1][1] === 'WP: What' ||
+                treeStructure[1][1][1] === 'WP: what') {
+                this.rootNode.setTreeType('WHAT_IS');
+            }
+        }
+    }
+
+    public treeType() {
+        return this.rootNode.treeType();
+    }
+
+    public treeStructure() {
+        return this.rootNode.structure();
     }
 
     public static newTreeFromString(nlpResult, linkToParent = false) {
@@ -131,6 +187,8 @@ export class Tree {
         tree.doDFS(node => node.setText());
         tree.mergeTreeNERs();
         tree.doDFS(node => node.setStructure());
+        tree.setFlatRels();
+        tree.tagTree();
 
         return tree;
     }

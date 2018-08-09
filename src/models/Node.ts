@@ -15,6 +15,9 @@ export class Node {
     private _token: any;
     private _language: string;
     private _structure: Array<any>;
+    private _relations: Array<any>;
+    private _relsFlat: Array<string>;
+    private _treeType: string;
 
     constructor(pos: string = '', word: string, children: Array<Node> = [], parent: Node = null) {
         this._pos = pos;
@@ -44,8 +47,28 @@ export class Node {
         this._type = type;
     }
 
+    public treeType() {
+        return this._treeType;
+    }
+
+    public setTreeType(treeType: string) {
+        this._treeType = treeType;
+    }
+
+    public relations() {
+        return this._relations;
+    }
+
     public structure() {
         return this._structure;
+    }
+
+    public setRelsFlat(relsFlat: Array<string>){
+        return this._relsFlat = relsFlat;
+    }  
+    
+    public relsFlat(){
+        return this._relsFlat;
     }
 
     public setTextRoot(text: string) {
@@ -81,10 +104,13 @@ export class Node {
     public setStructure() {
         if (this._type === NODE_TYPES.REL && this.children() && this.children().length > 0) {
             this._structure = [];
+            this._relations = [];
+            this._structure.push(`Rel: ${this.pos()}`)
 
             this.children().forEach((child, idx) => {
                 if (child.type() === NODE_TYPES.REL) {
-                    this._structure.push(child.structure() )
+                    this._structure.push(child.structure())
+                    this._relations.push([child.pos() , child.relations()] )
                 }
 
                 if (child.type() === NODE_TYPES.WORD) {
@@ -100,6 +126,12 @@ export class Node {
             return this.token().ner();
         }
     }
+    
+    public cleanLemma(){
+        if (this.token()) {
+            delete this.token()._lemma;
+        }
+    }
 
     public pos() {
         return this._pos;
@@ -107,6 +139,10 @@ export class Node {
 
     public posInfo() {
         return this._posInfo;
+    }
+
+    public setPosToNE(){
+        this._pos= 'NE';
     }
 
     private setPosInfo(pos: string) {
@@ -168,7 +204,9 @@ export class Node {
 
         if (this._pos === 'ROOT') {
             json = {
+                treeType: this._treeType,
                 ...json,
+                relFlat: this._relsFlat,
                 structure: this._structure,
             }
         }
@@ -246,7 +284,8 @@ const POS = {
     'WP': 'Wh­pronoun',
     'WP$': 'Possessive wh­pronoun',
     'WRB': 'Wh­adverb',
-    '.': 'Dot'
+    '.': 'Dot',
+    'NE': 'Named entity'
 }
 
 const REL = {

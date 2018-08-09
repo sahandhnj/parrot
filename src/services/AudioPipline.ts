@@ -11,6 +11,7 @@ import { DataBaseService } from './DataBaseService';
 import { Calculator } from './Calculator';
 import { Weather } from './Weather';
 import { SystemMonitor } from './SystemMonitor';
+import { NLPService } from './NLPService';
 
 const rawDir = 'media/raw';
 const outputDir = 'static/output';
@@ -70,15 +71,18 @@ export class AudioPipline {
 
         if (transcription.toLowerCase().includes("thank")) {
             answer = "You are welcome.";
-
-            if (!answer) {
-                answer = "Sorry, I'm afraid I don't know how to answer your question.";
-            }
-
-            await DataBaseService.insert(uuid, transcription);
-            await InteractionService.speak(answer, outputFile);
-            res.send({ name: uuid + '.wav', transcript: transcription });
         }
+
+        answer= await NLPService.parse(transcription);
+
+        if (!answer) {
+            answer = "Sorry, I'm afraid I don't know how to answer your question.";
+        }
+
+        await DataBaseService.insert(uuid, transcription);
+        await InteractionService.speak(answer, outputFile);
+
+        res.send({ name: uuid + '.wav', transcript: transcription });
     }
 }
 const includePhrase = (text: string, phrases: Array<string>) => {

@@ -2,6 +2,7 @@ import CoreNLP, { Properties, Pipeline } from 'corenlp';
 import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
 import { Tree } from '../models/Tree';
 import { TreeService } from './TreeService';
+import { Convertor } from './Convertor';
 
 export class NLPService {
     static parse = async (text) => {
@@ -12,21 +13,114 @@ export class NLPService {
         const sent = new CoreNLP.simple.Sentence(text);
         const nlpresult = await pipeline.annotate(sent)
 
-        
 
-        const tokens = nlpresult.tokens();
-        const deps = nlpresult._enhancedPlusPlusDependencies;
-        const governors = nlpresult.governors();
-        const newDeps = NLPService.parseObj(deps, tokens);
-        const ners= TreeService.mergeNERs(tokens);
-        
+        // const tokens = nlpresult.tokens();
+        // const deps = nlpresult._enhancedPlusPlusDependencies;
+        // const governors = nlpresult.governors();
+        // const newDeps = NLPService.parseObj(deps, tokens);
+        // const ners = TreeService.mergeNERs(tokens);
+
         const tree: Tree = Tree.newTreeFromString(nlpresult);
         tree.dumpToFile();
+        
+        let endResult;
+        if (tree.treeType() === 'WHAT_IS') {
+            endResult = NLPService.doWhatIs(tree);
+            if(endResult.mode === 'convertor'){
+                return Convertor.parseConversionObj(endResult);
+            }
+        }
+    }
 
-        console.log('--------------------\nBreaking down:', text);
-        const newNewDeps = NLPService.mapOneWayRelations(newDeps);
-        const tokenRelations = NLPService.analyse(newNewDeps);
-        const endResult = NLPService.toSearchObj(tokenRelations);
+    static doWhatIs = (tree) => {
+        let whatis = NLPService.flattenDeep(tree.treeStructure());
+        NLPService.cleanWhatIs(whatis);
+        let hasIn = NLPService.checkForHasIn(whatis);
+        
+        if (hasIn) {
+            return hasIn;
+        }
+    }
+
+    static flattenDeep = (arr: Array<any>) => {
+        return arr.reduce((acc, val) => Array.isArray(val) ? acc.concat(NLPService.flattenDeep(val)) : acc.concat(val), []);
+    }
+
+    static cleanWhatIs = (arr: Array<string>) => {
+        arr.splice(0, arr.indexOf('Rel: SQ') + 1);
+        arr.splice(0, arr.indexOf('VBZ: is') + 1);
+
+        arr.forEach((item, index, object) => {
+            if (item.startsWith('Rel:')) {
+                object.splice(index, 1);
+            }
+        });
+
+        arr.forEach((item, index, object) => {
+            if (item.startsWith('Rel:')) {
+                object.splice(index, 1);
+            }
+        });
+    }
+
+    static checkForHasIn = (words) => {
+        let result;
+        let clonedArr = words.slice(0);
+        let index = clonedArr.indexOf('IN: in');
+
+        if (index < 0) {
+            return;
+        }
+
+        let to = clonedArr.splice(index, clonedArr.length - index);
+        let from = clonedArr;
+
+        to.splice(0, 1);
+        to.forEach((b, i) => {
+            b = b.substring(b.indexOf(': ') + 2, b.length - b.indexOf(': ') + 3);
+            to[i] = b;
+        })
+        to = to.join(' ');
+
+        let fromObj = {} as any;
+
+        from.forEach((f, i, obj) => {
+            if (f.startsWith('CD:')) {
+                f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+                fromObj.number = f;
+                obj.splice(i, 1);
+            }
+        })
+
+        from.forEach((f, i) => {
+            f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+            from[i] = f;
+        })
+
+        from = from.join(' ');
+        fromObj.object = from;
+
+        let mode;
+
+        if (languages.indexOf(to) > -1) {
+            mode = 'translate';
+        }
+        else {
+            if(Convertor.findUnitData(fromObj.object)){
+                fromObj.object = Convertor.findUnitData(fromObj.object);
+                mode = 'convertor';
+            }
+
+            if(mode == 'convertor' && Convertor.findUnitData(to)) {
+                to= Convertor.findUnitData(to);
+            }
+        }
+
+        let endResult = {
+            mode: mode,
+            from: fromObj,
+            to: to,
+        } as any;
 
         return endResult;
     }
@@ -533,3 +627,218 @@ let tags = {
     '0': 'Zero variant of that in subordinate clauses',
     'T': 'Trace of wh-Constituen'
 }
+
+const languages = [
+    'acholi',
+    'adyghe',
+    'afrikaans',
+    'afrikaans',
+    'afrikaans',
+    'akan',
+    'arabic',
+    'arabic',
+    'arabic',
+    'arabic',
+    'aymara',
+    'azerbaijani',
+    'azerbaijani',
+    'belarusian',
+    'bulgarian',
+    'bulgarian',
+    'bengali',
+    'bengali',
+    'bengali',
+    'bosnian',
+    'catalan',
+    'catalan',
+    'kaqchikel',
+    'cherokee',
+    'czech',
+    'czech',
+    'welsh',
+    'welsh',
+    'danish',
+    'danish',
+    'german',
+    'german',
+    'german',
+    'german',
+    'lower sorbian',
+    'greek',
+    'greek',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'esperanto',
+    'esperanto',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'estonian',
+    'estonian',
+    'basque',
+    'basque',
+    'persian',
+    'persian',
+    'leet',
+    'fulah',
+    'finnish',
+    'finnish',
+    'faroese',
+    'french',
+    'french',
+    'french',
+    'french',
+    'french',
+    'frisian',
+    'irish',
+    'irish',
+    'galician',
+    'galician',
+    'guarani',
+    'gujarati',
+    'classical greek',
+    'hebrew',
+    'hebrew',
+    'hindi',
+    'hindi',
+    'croatian',
+    'croatian',
+    'upper sorbian',
+    'haitian creole',
+    'hungarian',
+    'hungarian',
+    'armenian',
+    'indonesian',
+    'indonesian',
+    'icelandic',
+    'icelandic',
+    'italian',
+    'italian',
+    'japanese',
+    'japanese',
+    'javanese',
+    'georgian',
+    'kazakh',
+    'khmer',
+    'khmer',
+    'kabyle',
+    'kannada',
+    'kannada',
+    'korean',
+    'korean',
+    'kurdish',
+    'latin',
+    'latin',
+    'luxembourgish',
+    'limburgish',
+    'lithuanian',
+    'lithuanian',
+    'latvian',
+    'latvian',
+    'maithili',
+    'malagasy',
+    'macedonian',
+    'macedonian',
+    'malayalam',
+    'malayalam',
+    'mongolian',
+    'marathi',
+    'marathi',
+    'malay',
+    'malay',
+    'maltese',
+    'maltese',
+    'burmese',
+    'norwegian',
+    'norwegian',
+    'norwegian',
+    'nepali',
+    'nepali',
+    'dutch',
+    'dutch',
+    'dutch',
+    'norwegian',
+    'occitan',
+    'oriya',
+    'punjabi',
+    'punjabi',
+    'polish',
+    'polish',
+    'pashto',
+    'portuguese',
+    'portuguese',
+    'portuguese',
+    'quechua',
+    'romansh',
+    'romanian',
+    'romanian',
+    'russian',
+    'russian',
+    'sanskrit',
+    'northern sámi',
+    'sinhala',
+    'slovak',
+    'slovak',
+    'slovenian',
+    'slovenian',
+    'somali',
+    'albanian',
+    'albanian',
+    'serbian',
+    'serbian',
+    'sundanese',
+    'swedish',
+    'swedish',
+    'swahili',
+    'swahili',
+    'tamil',
+    'tamil',
+    'telugu',
+    'telugu',
+    'tajik',
+    'tajik',
+    'thai',
+    'thai',
+    'filipino',
+    'filipino',
+    'klingon',
+    'turkish',
+    'turkish',
+    'tatar',
+    'ukrainian',
+    'ukrainian',
+    'urdu',
+    'urdu',
+    'uzbek',
+    'uzbek',
+    'vietnamese',
+    'vietnamese',
+    'xhosa',
+    'yiddish',
+    'yiddish',
+    'chinese',
+    'chinese simplified',
+    'chinese traditional',
+    'chinese simplified',
+    'chinese traditional',
+    'chinese simplified',
+    'chinese'
+]
