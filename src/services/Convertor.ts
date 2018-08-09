@@ -12,7 +12,6 @@ export class Convertor {
             if (l.abbr.toLowerCase() === unit.toLowerCase() ||
                 l.singular.toLowerCase() === unit.toLowerCase() ||
                 l.plural.toLowerCase() === unit.toLowerCase()) {
-                console.log(l);
                 parsedUnit = l;
             }
         })
@@ -31,11 +30,16 @@ export class Convertor {
         let err;
 
         if (posibilites.indexOf(to.abbr) < 0) {
-            err = `${to.singular} can be converted to `;
+            let toObj = to;
+            if (to.singular) {
+                toObj = to.singular;
+            }
+
+            err = `${from.singular} can not be converted to ${toObj}. Please use `;
 
             posibilites.forEach((p, idx) => {
                 err += convert().describe(p).singular;
-                err += idx == (posibilites.length - 1) ? "." : (idx == (posibilites.length - 2) ? " and " : ", ");
+                err += idx == (posibilites.length - 1) ? "." : (idx == (posibilites.length - 2) ? " or " : ", ");
             })
         }
 
@@ -43,8 +47,20 @@ export class Convertor {
             return err;
         }
 
+        function isFloat(n){
+            return Number(n) === n && n % 1 !== 0;
+        }
+
         let answer = convert(parseFloat(amount)).from(from.abbr).to(to.abbr);
 
+        if(isFloat(answer) && answer.toFixed(2).toString() !== '0.00'){
+            answer = answer.toFixed(2);
+        }
+
+        if(isFloat(answer) && answer.toFixed(2).toString() === '0.00'){
+            answer = answer.toPrecision(2);
+        }
+        
         if (answer) {
             return `${amount} ${from.plural} is ${answer} ${to.plural}`
         }
