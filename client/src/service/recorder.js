@@ -134,10 +134,12 @@ Recorder.process = async (blob) => {
 	}
 
 	let body = await response.json();
-	console.log(body);
 	repeat(false, body.name);
 
-	return body.transcript;
+	return {
+		transcript: body.transcript,
+		answer: body.answer
+	};
 };
 
 

@@ -18,3 +18,12 @@ body {
 .assistantHolder {
     padding-top: 100px
 }
+
+.row-of-icons {
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* IE 10+ */
+    user-select: none;          /* Likely future */   
+    padding-top: 20px;
+    color: white;   
+  }

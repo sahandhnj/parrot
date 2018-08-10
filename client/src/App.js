@@ -15,6 +15,7 @@ class App extends Component {
 			isRecording: false,
 			stream: null,
 			transcript: null,
+			answer: null,
 			analyserData: { data: [], lineTo: 0 },
 		};
 
@@ -48,11 +49,12 @@ class App extends Component {
 			blob,
 		});
 
-		const transcript = await Recorder.process(this.state.blob);
+		const data = await Recorder.process(this.state.blob);
 
 		this.setState({
 			blob: null,
-			transcript: transcript,
+			transcript: data.transcript,
+			answer: data.answer
 		});
 	}
 
@@ -63,7 +65,7 @@ class App extends Component {
 	render() {
 		return (
 			<div className="App">
-				<RecordAnimation down={this.start} up={this.stop} isRecording={this.state.isRecording} transcript={this.state.transcript} />
+				<RecordAnimation down={this.start} up={this.stop} isRecording={this.state.isRecording} transcript={this.state.transcript} answer={this.state.answer} />
 				<div>
 					<audio id="playAudio">
 						<source type="audio/mpeg" />

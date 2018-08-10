@@ -100,6 +100,12 @@ class RecordAnimation extends Component {
         }
     }
 
+    answer() {
+        if (this.props.answer) {
+            return 'Answer: ' + this.props.answer;
+        }
+    }
+
     _handleContextMenu = (event) => {
         event.preventDefault();
     }
@@ -108,8 +114,9 @@ class RecordAnimation extends Component {
         return (
             <div className="assistantHolder" onContextMenu={this._handleContextMenu}>
                 <canvas ref="canvas" width={640} height={425} onMouseDown={this.onMouseDown} onMouseUp={this.onMouseUp} onTouchStart={this.props.down} onTouchEnd={this.props.up}/>
-                <div id="transcript">
-                    {this.transcript()}
+                <div id="transcript" className="row-of-icons">
+                    {this.transcript()} <br /><br />
+                    {this.answer()}
                 </div>
             </div>
         );

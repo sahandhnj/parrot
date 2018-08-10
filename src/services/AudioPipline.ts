@@ -89,7 +89,7 @@ export class AudioPipline {
             await DataBaseService.insert(uuid, transcription);
             await InteractionService.speak(answer, outputFile);
 
-            res.send({ name: uuid + '.wav', transcript: transcription });
+            res.send({ name: uuid + '.wav', transcript: transcription, answer: answer });
         }
         catch (e) {
             console.log('sad');
@@ -97,8 +97,8 @@ export class AudioPipline {
             let answer = "Sorry, I'm afraid I don't know how to answer your question.";
             const outputFile = path.join(outputDir, 'error.wav');
             await InteractionService.speak(answer, outputFile);
-            
-            res.send({ name: 'error.wav', transcript: transcription });
+
+            res.send({ name: 'error.wav', transcript: transcription, answer: answer });
         }
     }
 }

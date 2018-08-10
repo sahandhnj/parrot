@@ -28,7 +28,6 @@ export class AudioRoute {
                 res.status(500);
                 return res.send();
             }
-
         })
 
         router.post('/test2', async (req: Request, res: Response, next: NextFunction) => {
@@ -52,7 +51,6 @@ export class AudioRoute {
                 res.status(500);
                 return res.send();
             }
-
         })
     }
 }
