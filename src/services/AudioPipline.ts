@@ -19,6 +19,7 @@ const nlpTreeDir = 'media/nlpTrees';
 
 export class AudioPipline {
     public static pipeIt = async (res, req) => {
+        let transcription;
         try {
             if (!req.files.audio || !req.files.audio.data) {
                 res.sendStatus(400);
@@ -33,7 +34,7 @@ export class AudioPipline {
             let binaryArray = new Uint8Array(req.files.audio.data);
             await fsp.writeFileAsync(rawFile, new Buffer(binaryArray as any));
 
-            let transcription = await InteractionService.syncRecognize(rawFile);
+            transcription = await InteractionService.syncRecognize(rawFile);
             console.log('transcription:', transcription);
 
             if (!transcription) {
@@ -91,10 +92,13 @@ export class AudioPipline {
             res.send({ name: uuid + '.wav', transcript: transcription });
         }
         catch (e) {
+            console.log('sad');
             console.log(e);
             let answer = "Sorry, I'm afraid I don't know how to answer your question.";
             const outputFile = path.join(outputDir, 'error.wav');
             await InteractionService.speak(answer, outputFile);
+            
+            res.send({ name: 'error.wav', transcript: transcription });
         }
     }
 }

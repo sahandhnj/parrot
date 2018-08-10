@@ -38,6 +38,18 @@ export class Guru {
             })
         }
 
+        if (!index) {
+            propertyCopied = property.replace(' ', ' ');
+
+            console.log('Looking for', propertyCopied);
+            infoBoxesTitles.forEach(ib => {
+                if (!index && ib.includes(propertyCopied)) {
+                    console.log('Found infoBox: ', ib);
+                    index = ib;
+                }
+            })
+        }
+
         let answer;
         if (infoBoxes[index] && infoBoxes[index].data.text) {
             answer = `The ${property} of ${phrase} is ${infoBoxes[index].data.text}`;
