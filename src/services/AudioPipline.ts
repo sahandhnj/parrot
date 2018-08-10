@@ -77,7 +77,9 @@ export class AudioPipline {
                 answer = "You are welcome.";
             }
 
-            answer = await NLPService.parse(transcription, nlpTreeFile);
+            if(!answer){
+                answer = await NLPService.parse(transcription, nlpTreeFile);
+            }
 
             if (!answer) {
                 answer = "Sorry, I'm afraid I don't know how to answer your question.";
