@@ -1,6 +1,7 @@
-const TYPES = {
+export const NODE_TYPES = {
     REL: 'relation',
-    WORD: 'word'
+    WORD: 'word',
+    MERGED: 'merged'
 };
 
 export class Node {
@@ -11,18 +12,21 @@ export class Node {
     private _word: string;
     private _children: Array<Node>;
     private _parent: Node;
-    private _token: Array<any>;
+    private _token: any;
     private _language: string;
     private _structure: Array<any>;
+    private _relations: Array<any>;
+    private _relsFlat: Array<string>;
+    private _treeType: string;
 
     constructor(pos: string = '', word: string, children: Array<Node> = [], parent: Node = null) {
         this._pos = pos;
 
         if (word) {
             this._word = word;
-            this._type = TYPES.WORD;
+            this._type = NODE_TYPES.WORD;
         } else {
-            this._type = TYPES.REL;
+            this._type = NODE_TYPES.REL;
         }
 
         this._children = children;
@@ -39,12 +43,44 @@ export class Node {
         return this._type;
     }
 
+    public setType(type: string) {
+        this._type = type;
+    }
+
+    public treeType() {
+        return this._treeType;
+    }
+
+    public setTreeType(treeType: string) {
+        this._treeType = treeType;
+    }
+
+    public relations() {
+        return this._relations;
+    }
+
     public structure() {
         return this._structure;
     }
 
+    public setRelsFlat(relsFlat: Array<string>){
+        return this._relsFlat = relsFlat;
+    }  
+    
+    public relsFlat(){
+        return this._relsFlat;
+    }
+
     public setTextRoot(text: string) {
         return this._text = text;
+    }
+
+    public setWord(word: string) {
+        return this._word = word;
+    }
+
+    public setChildren(children: Array<Node>) {
+        return this._children = children;
     }
 
     public setText() {
@@ -52,7 +88,7 @@ export class Node {
             this._text = '';
 
             this.children().forEach((child, idx) => {
-                this._text += child.type() === TYPES.REL ?
+                this._text += child.type() === NODE_TYPES.REL ?
                     child.text() :
                     child.word();
 
@@ -62,24 +98,38 @@ export class Node {
                     this._text += ' ';
                 }
             })
-
         }
     }
 
     public setStructure() {
-        if (this._type === TYPES.REL && this.children() && this.children().length > 0) {
+        if (this._type === NODE_TYPES.REL && this.children() && this.children().length > 0) {
             this._structure = [];
+            this._relations = [];
+            this._structure.push(`Rel: ${this.pos()}`)
 
             this.children().forEach((child, idx) => {
-                if (child.type() === TYPES.REL) {
+                if (child.type() === NODE_TYPES.REL) {
                     this._structure.push(child.structure())
+                    this._relations.push([child.pos() , child.relations()] )
                 }
 
-                if (child.type() === TYPES.WORD) {
-                    this._structure.push(child.pos())
+                if (child.type() === NODE_TYPES.WORD) {
+                    this._structure.push(`${child.pos()}: ${child.word()}`)
                 }
             })
 
+        }
+    }
+
+    public ner() {
+        if (this.token()) {
+            return this.token().ner();
+        }
+    }
+    
+    public cleanLemma(){
+        if (this.token()) {
+            delete this.token()._lemma;
         }
     }
 
@@ -89,6 +139,10 @@ export class Node {
 
     public posInfo() {
         return this._posInfo;
+    }
+
+    public setPosToNE(){
+        this._pos= 'NE';
     }
 
     private setPosInfo(pos: string) {
@@ -124,6 +178,10 @@ export class Node {
         return this._children;
     }
 
+    public dropChildren() {
+        delete this._children;
+    }
+
     public appendChild(node) {
         this._children.push(node);
     }
@@ -146,23 +204,32 @@ export class Node {
 
         if (this._pos === 'ROOT') {
             json = {
+                treeType: this._treeType,
                 ...json,
+                relFlat: this._relsFlat,
                 structure: this._structure,
             }
         }
 
-        if (this.children() && this.children().length > 0) {
+        if (this._type === NODE_TYPES.REL && this.children() && this.children().length > 0) {
             return {
                 ...json,
                 children: this.children()
             }
         }
 
-        return {
-            ...json,
-            word: this.word(),
-            token: this.parseToken(this.token())
+        if (this._type === NODE_TYPES.WORD) {
+            return {
+                ...json,
+                word: this.word(),
+                token: this.parseToken(this.token())
+            }
         }
+
+        return {
+            ...json
+        }
+
     }
 
     public parseToken(token) {
@@ -217,6 +284,8 @@ const POS = {
     'WP': 'Wh­pronoun',
     'WP$': 'Possessive wh­pronoun',
     'WRB': 'Wh­adverb',
+    '.': 'Dot',
+    'NE': 'Named entity'
 }
 
 const REL = {

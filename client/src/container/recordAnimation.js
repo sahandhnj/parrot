@@ -1,6 +1,28 @@
 import React, { Component } from 'react';
 import '../style/RecordAnimation.css';
+<<<<<<< HEAD
 // import hal from '../../public/hal9000.png';
+=======
+import hal from '../../public/hal9000.png';
+
+
+
+// initial setup
+const canvas = document.querySelector("#assistant-canvas");
+const c = canvas.getContext("2d");
+c.fillStyle = "red";
+c.strokeStyle = "red";
+c.fillRect(0, 0, 1000, 1000);
+
+console.log(document.querySelector("#assistant-canvas"));
+
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+
+const cx = canvas.width / 2;
+const cy = canvas.height / 2;
+>>>>>>> 99a50bd4c0f6d435e765cfc3bd268ae217a1b341
 
 var blueprint = [
     { x: cx, y: cy, radius: 200, startAngle: 0, endAngle: 360, length: 360, speed: 0, color: "#f8f8ff", lw: 10, ccw: false },

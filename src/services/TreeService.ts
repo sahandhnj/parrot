@@ -40,20 +40,31 @@ export class TreeService{
     }
 
     public static mergeTreeNERs(ners: Array<any>, tree:Tree){
-        console.log('Processing-0');
+        console.log('Merge NERS children');
+        const decide= node =>{
+            let ner;
+            let requiresMerging= true;
 
-        const processNodes= node =>{
-            console.log('Processing');
-            node.children().forEach(child =>{
-                console.log('child',child);
-                ners.forEach(ner =>{
-                    if(ner.indexes[0] === child.index()){
-                        console.log('Found it',child.word() )
-                    }
-                })
+            node.children().forEach((child,idx) =>{
+                if(idx === 0){
+                    ner= child.ner();
+                }
+
+                if(!ner || ner === 'O'){
+                    requiresMerging= false;
+                    return;
+                }
+
+                console.log('-------->',child.word() , ner);
+                if(child.ner() !== ner){
+                    requiresMerging= false;
+                }
             })
+
+            return requiresMerging;
         };
 
-        tree.mergeChildren(processNodes);
+        tree.mergeChildrenToParent(decide);
+        console.log('--------------------');
     }
 }

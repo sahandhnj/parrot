@@ -14,15 +14,16 @@
   "dependencies": {
     "@google-cloud/speech": "^2.0.0",
     "@google-cloud/text-to-speech": "^0.3.0",
-    "@types/bluebird": "^3.5.22",
+    "@types/bluebird": "^3.5.23",
     "@types/cookie-parser": "^1.4.1",
     "@types/errorhandler": "0.0.32",
     "@types/express-fileupload": "^0.1.1",
     "@types/helmet": "0.0.38",
     "@types/morgan": "^1.7.35",
-    "@types/node-fetch": "^2.1.1",
+    "@types/node-fetch": "^2.1.2",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.3",
+    "convert-units": "git+https://github.com/sahandhnj/convert-units.git#changes_for_hal",
     "cookie-parser": "^1.4.3",
     "corenlp": "^1.4.3",
     "cors": "^2.8.4",
@@ -33,12 +34,13 @@
     "grunt": "^1.0.3",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-exec": "^3.0.0",
-    "helmet": "^3.12.1",
+    "helmet": "^3.13.0",
     "morgan": "^1.9.0",
-    "node-fetch": "^2.1.2",
+    "node-fetch": "^2.2.0",
     "pg": "^7.4.3",
     "typescript": "^2.9.2",
     "uuid": "^3.3.2",
-    "wav": "^1.0.2"
+    "wav": "^1.0.2",
+    "wtf_wikipedia": "^5.0.0"
   }
 }

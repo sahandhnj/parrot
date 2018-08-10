@@ -2,9 +2,11 @@ import CoreNLP, { Properties, Pipeline } from 'corenlp';
 import { SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS } from 'constants';
 import { Tree } from '../models/Tree';
 import { TreeService } from './TreeService';
+import { Convertor } from './Convertor';
+import { Guru } from './Guru';
 
 export class NLPService {
-    static parse = async (text) => {
+    static parse = async (text, uuid?) => {
         const pipeline = new Pipeline(new Properties({
             annotators: 'tokenize,ssplit,pos,lemma,ner,parse',
         }), 'English');
@@ -12,24 +14,189 @@ export class NLPService {
         const sent = new CoreNLP.simple.Sentence(text);
         const nlpresult = await pipeline.annotate(sent)
 
-        const tree: Tree = Tree.newTreeFromString(nlpresult);
-       
-        tree.dumpToFile();
 
-        const tokens = nlpresult.tokens();
-        const deps = nlpresult._enhancedPlusPlusDependencies;
-        const governors = nlpresult.governors();
-        const newDeps = NLPService.parseObj(deps, tokens);
-        const ners= TreeService.mergeNERs(tokens);
-        TreeService.mergeTreeNERs(ners,tree);
+        // const tokens = nlpresult.tokens();
+        // const deps = nlpresult._enhancedPlusPlusDependencies;
+        // const governors = nlpresult.governors();
+        // const newDeps = NLPService.parseObj(deps, tokens);
+        // const ners = TreeService.mergeNERs(tokens);
+
+        const tree: Tree = Tree.newTreeFromString(nlpresult);
+        tree.dumpToFile(uuid);
         
-        console.log('--------------------\nBreaking down:', text);
-        const newNewDeps = NLPService.mapOneWayRelations(newDeps);
-        const tokenRelations = NLPService.analyse(newNewDeps);
-        const endResult = NLPService.toSearchObj(tokenRelations);
+        let endResult;
+        if (tree.treeType() === 'WHAT_IS') {
+            endResult = NLPService.doWhatIs(tree);
+            console.log(endResult);
+            if(endResult && endResult.mode === 'convertor'){
+                return Convertor.parseConversionObj(endResult);
+            }
+            
+            if(endResult && endResult.mode === 'guru'){
+                let answer= await Guru.parseGuruObj(endResult);
+                return answer;
+            }
+
+            if(endResult && endResult.mode === 'full'){
+                let answer= await Guru.parseFullObj(endResult);
+                return answer;
+            }
+        }
+    }
+
+    static doWhatIs = (tree) => {
+        let whatis = NLPService.flattenDeep(tree.treeStructure());
+        NLPService.cleanWhatIs(whatis);
+        let hasIn = NLPService.checkForHasIn(whatis);
+        
+        if (hasIn) {
+            return hasIn;
+        }
+
+        let hasOf = NLPService.checkForHasOf(whatis);
+        
+        if (hasOf) {
+            return hasOf;
+        }
+
+        let full = NLPService.checkForfull(whatis);
+        
+        if (full) {
+            return full;
+        }
+    }
+
+    static flattenDeep = (arr: Array<any>) => {
+        return arr.reduce((acc, val) => Array.isArray(val) ? acc.concat(NLPService.flattenDeep(val)) : acc.concat(val), []);
+    }
+
+    static cleanWhatIs = (arr: Array<string>) => {
+        arr.splice(0, arr.indexOf('Rel: SQ') + 1);
+        arr.splice(0, arr.indexOf('VBZ: is') + 1);
+
+        arr.forEach((item, index, object) => {
+            if (item.startsWith('Rel:')) {
+                object.splice(index, 1);
+            }
+        });
+
+        arr.forEach((item, index, object) => {
+            if (item.startsWith('Rel:')) {
+                object.splice(index, 1);
+            }
+        });
+    }
+
+    static checkForHasIn = (words) => {
+        let result;
+        let clonedArr = words.slice(0);
+        let index = clonedArr.indexOf('IN: in');
+
+        if (index < 0) {
+            return;
+        }
+
+        let to = clonedArr.splice(index, clonedArr.length - index);
+        let from = clonedArr;
+
+        to.splice(0, 1);
+        to.forEach((b, i) => {
+            b = b.substring(b.indexOf(': ') + 2, b.length - b.indexOf(': ') + 3);
+            to[i] = b;
+        })
+        to = to.join(' ');
+
+        let fromObj = {} as any;
+
+        from.forEach((f, i, obj) => {
+            if (f.startsWith('CD:')) {
+                f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+                fromObj.number = f;
+                obj.splice(i, 1);
+            }
+        })
+
+        from.forEach((f, i) => {
+            f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+            from[i] = f;
+        })
+
+        from = from.join(' ');
+        fromObj.object = from;
+
+        let mode;
+
+        if (languages.indexOf(to) > -1) {
+            mode = 'translate';
+        }
+        else {
+            if(Convertor.findUnitData(fromObj.object)){
+                fromObj.object = Convertor.findUnitData(fromObj.object);
+                mode = 'convertor';
+            }
+
+            if(mode == 'convertor' && Convertor.findUnitData(to)) {
+                to= Convertor.findUnitData(to);
+            }
+        }
+
+        let endResult = {
+            mode: mode,
+            from: fromObj,
+            to: to,
+        } as any;
 
         return endResult;
     }
+
+    static checkForHasOf = (words) => {
+        let result;
+        let clonedArr = words.slice(0);
+        let index = clonedArr.indexOf('IN: of');
+
+        if (index < 0) {
+            return;
+        }
+
+        let main = clonedArr.splice(index, clonedArr.length - index);
+        let property = clonedArr;
+
+        main.splice(0, 1);
+        main.forEach((b, i) => {
+            b = b.substring(b.indexOf(': ') + 2, b.length - b.indexOf(': ') + 3);
+            main[i] = b;
+        })
+        main = main.join(' ');
+
+        property.forEach((f, i) => {
+            f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+            property[i] = f;
+        })
+
+        property = property.join(' ');
+        property = property.replace('the','');
+        property = property.trim();
+        let mode = 'guru';
+
+        return {property, main, mode};
+    }
+
+    static checkForfull = (words) => {
+        let main = words.slice(0);
+
+        main.forEach((f, i) => {
+            f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+            main[i] = f;
+        })
+
+        main = main.join(' ');
+        main = main.replace('the','');
+        main = main.trim();
+        let mode = 'full';
+
+        return {main, mode};
+    }
+
 
     static mapRelations = (deps, tokens) => {
         deps.forEach(dep => {
@@ -533,3 +700,218 @@ let tags = {
     '0': 'Zero variant of that in subordinate clauses',
     'T': 'Trace of wh-Constituen'
 }
+
+const languages = [
+    'acholi',
+    'adyghe',
+    'afrikaans',
+    'afrikaans',
+    'afrikaans',
+    'akan',
+    'arabic',
+    'arabic',
+    'arabic',
+    'arabic',
+    'aymara',
+    'azerbaijani',
+    'azerbaijani',
+    'belarusian',
+    'bulgarian',
+    'bulgarian',
+    'bengali',
+    'bengali',
+    'bengali',
+    'bosnian',
+    'catalan',
+    'catalan',
+    'kaqchikel',
+    'cherokee',
+    'czech',
+    'czech',
+    'welsh',
+    'welsh',
+    'danish',
+    'danish',
+    'german',
+    'german',
+    'german',
+    'german',
+    'lower sorbian',
+    'greek',
+    'greek',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'english',
+    'esperanto',
+    'esperanto',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'spanish',
+    'estonian',
+    'estonian',
+    'basque',
+    'basque',
+    'persian',
+    'persian',
+    'leet',
+    'fulah',
+    'finnish',
+    'finnish',
+    'faroese',
+    'french',
+    'french',
+    'french',
+    'french',
+    'french',
+    'frisian',
+    'irish',
+    'irish',
+    'galician',
+    'galician',
+    'guarani',
+    'gujarati',
+    'classical greek',
+    'hebrew',
+    'hebrew',
+    'hindi',
+    'hindi',
+    'croatian',
+    'croatian',
+    'upper sorbian',
+    'haitian creole',
+    'hungarian',
+    'hungarian',
+    'armenian',
+    'indonesian',
+    'indonesian',
+    'icelandic',
+    'icelandic',
+    'italian',
+    'italian',
+    'japanese',
+    'japanese',
+    'javanese',
+    'georgian',
+    'kazakh',
+    'khmer',
+    'khmer',
+    'kabyle',
+    'kannada',
+    'kannada',
+    'korean',
+    'korean',
+    'kurdish',
+    'latin',
+    'latin',
+    'luxembourgish',
+    'limburgish',
+    'lithuanian',
+    'lithuanian',
+    'latvian',
+    'latvian',
+    'maithili',
+    'malagasy',
+    'macedonian',
+    'macedonian',
+    'malayalam',
+    'malayalam',
+    'mongolian',
+    'marathi',
+    'marathi',
+    'malay',
+    'malay',
+    'maltese',
+    'maltese',
+    'burmese',
+    'norwegian',
+    'norwegian',
+    'norwegian',
+    'nepali',
+    'nepali',
+    'dutch',
+    'dutch',
+    'dutch',
+    'norwegian',
+    'occitan',
+    'oriya',
+    'punjabi',
+    'punjabi',
+    'polish',
+    'polish',
+    'pashto',
+    'portuguese',
+    'portuguese',
+    'portuguese',
+    'quechua',
+    'romansh',
+    'romanian',
+    'romanian',
+    'russian',
+    'russian',
+    'sanskrit',
+    'northern sámi',
+    'sinhala',
+    'slovak',
+    'slovak',
+    'slovenian',
+    'slovenian',
+    'somali',
+    'albanian',
+    'albanian',
+    'serbian',
+    'serbian',
+    'sundanese',
+    'swedish',
+    'swedish',
+    'swahili',
+    'swahili',
+    'tamil',
+    'tamil',
+    'telugu',
+    'telugu',
+    'tajik',
+    'tajik',
+    'thai',
+    'thai',
+    'filipino',
+    'filipino',
+    'klingon',
+    'turkish',
+    'turkish',
+    'tatar',
+    'ukrainian',
+    'ukrainian',
+    'urdu',
+    'urdu',
+    'uzbek',
+    'uzbek',
+    'vietnamese',
+    'vietnamese',
+    'xhosa',
+    'yiddish',
+    'yiddish',
+    'chinese',
+    'chinese simplified',
+    'chinese traditional',
+    'chinese simplified',
+    'chinese traditional',
+    'chinese simplified',
+    'chinese'
+]
