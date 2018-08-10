@@ -36,6 +36,11 @@ export class NLPService {
                 let answer= await Guru.parseGuruObj(endResult);
                 return answer;
             }
+
+            if(endResult && endResult.mode === 'full'){
+                let answer= await Guru.parseFullObj(endResult);
+                return answer;
+            }
         }
     }
 
@@ -52,6 +57,12 @@ export class NLPService {
         
         if (hasOf) {
             return hasOf;
+        }
+
+        let full = NLPService.checkForfull(whatis);
+        
+        if (full) {
+            return full;
         }
     }
 
@@ -169,6 +180,23 @@ export class NLPService {
 
         return {property, main, mode};
     }
+
+    static checkForfull = (words) => {
+        let main = words.slice(0);
+
+        main.forEach((f, i) => {
+            f = f.substring(f.indexOf(': ') + 2, f.length - f.indexOf(': ') + 3);
+            main[i] = f;
+        })
+
+        main = main.join(' ');
+        main = main.replace('the','');
+        main = main.trim();
+        let mode = 'full';
+
+        return {main, mode};
+    }
+
 
     static mapRelations = (deps, tokens) => {
         deps.forEach(dep => {

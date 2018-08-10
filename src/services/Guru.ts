@@ -46,12 +46,18 @@ export class Guru {
         return answer;
     }
 
+    static async parseFullObj(obj) {
+        let phrase = obj.main;
+        let doc = await wiki.fetch(phrase);
+        return doc.sentences(0).text() + doc.sentences(1).text()
+    }
+
     static async getMeOptions(phrase) {
         let doc = await wiki.fetch(phrase);
 
         let infoBoxes = doc.infoboxes()[0].data;
         let infoBoxesTitles = Object.keys(infoBoxes);
 
-        return infoBoxesTitles;
+        return {infoBoxesTitles,doc};
     }
 }

@@ -25,6 +25,8 @@ export class AudioRoute {
                 return res.send({ result });
             } catch (e) {
                 console.log(e);
+                res.status(500);
+                return res.send();
             }
 
         })
@@ -35,16 +37,20 @@ export class AudioRoute {
                 return res.send({ result });
             } catch (e) {
                 console.log(e);
+                res.status(500);
+                return res.send();
             }
 
         })
 
-        router.post('/test3', async (req: Request, res: Response, next: NextFunction) => {
+        router.post('/options', async (req: Request, res: Response, next: NextFunction) => {
             try {
                 const result = await Guru.getMeOptions(req.body.text);
                 return res.send({ result });
             } catch (e) {
                 console.log(e);
+                res.status(500);
+                return res.send();
             }
 
         })
