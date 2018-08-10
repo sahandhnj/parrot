@@ -104,7 +104,7 @@ class Recorder {
 		this.config.onAnalysed = handler;
 	}
 }
-const API = 'http://localhost:3710';
+const API = process.env.API_URL || 'http://localhost:3710';
 const repeat = (failed,name) => {
     let audio = document.getElementById("playAudio");
     let random = Math.floor(Math.random() * 1000) + 1
