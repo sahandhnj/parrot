@@ -26,8 +26,8 @@ class RecordAnimation extends Component {
         this.c.strokeStyle = "red";
         this.c.fillRect(0, 0, 1000, 1000);
 
-        this.canvas.width = innerWidth;
-        this.canvas.height = innerHeight;
+        this.canvas.width = 500//innerWidth;
+        this.canvas.height = 500//innerHeight;
 
         const cx = this.canvas.width / 2;
         const cy = this.canvas.height / 2;
