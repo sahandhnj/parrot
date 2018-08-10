@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './style/App.css';
 
-// import WaveStream from 'react-wave-stream';
+import WaveStream from 'react-wave-stream';
 import Recorder from './service/recorder';
 import RecordAnimation from './container/recordAnimation';
 
@@ -63,8 +63,10 @@ class App extends Component {
 	render() {
 		return (
 			<div className="App">
-				<h1> Sentiware </h1>
 				<RecordAnimation down={this.start} up={this.stop} isRecording={this.state.isRecording} transcript={this.state.transcript} />
+				<div className="wave-stream-container">
+					<WaveStream { ... this.state.analyserData } />
+				</div>
 				<div>
 					<audio id="playAudio">
 						<source type="audio/mpeg" />
