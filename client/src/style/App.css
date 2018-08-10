@@ -18,6 +18,14 @@ h1 {
   font-size: large;
 }
 
+h2 {
+  color: whitesmoke;
+}
+
+canvas {
+  margin: 0px;
+}
+
 .wave-stream-container{
   flex: 3;
   position: relative;

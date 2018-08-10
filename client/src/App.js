@@ -64,7 +64,6 @@ class App extends Component {
 		return (
 			<div className="App">
 				<div className="App-header">
-					<h2>VA</h2>
 					<RecordAnimation down={this.start} up={this.stop} isRecording={this.state.isRecording} transcript={this.state.transcript} />
 				</div>
 				<div className="wave-stream-container">

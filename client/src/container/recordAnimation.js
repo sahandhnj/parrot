@@ -22,8 +22,8 @@ class RecordAnimation extends Component {
         this.canvas = this.refs.canvas
         this.c = this.canvas.getContext("2d");
 
-        this.c.fillStyle = "red";
-        this.c.strokeStyle = "red";
+        // this.c.fillStyle = "red";
+        // this.c.strokeStyle = "red";
         this.c.fillRect(0, 0, 1000, 1000);
 
         this.canvas.width = innerWidth;
