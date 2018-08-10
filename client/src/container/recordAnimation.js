@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import '../style/RecordAnimation.css';
 import Assistant from '../service/assistant';
-const SPEED= 30;
+const SPEED= 10;
+
+
+const SPEED_C_1_1 = ((.5 * SPEED) / 30);
+const SPEED_C_1_2 = ((-3 * SPEED) / 30);
+const SPEED_C_2 = ((1 * SPEED) / 30);
 
 class RecordAnimation extends Component {
     blueprint1
@@ -26,30 +31,30 @@ class RecordAnimation extends Component {
         // this.c.strokeStyle = "red";
         this.c.fillRect(0, 0, 1000, 1000);
 
-        this.canvas.width = 500//innerWidth;
-        this.canvas.height = 500//innerHeight;
+        this.canvas.width = 250//innerWidth;
+        this.canvas.height = 250//innerHeight;
 
         const cx = this.canvas.width / 2;
         const cy = this.canvas.height / 2;
 
         this.blueprint1 = [
-            { x: cx, y: cy, radius: 200, startAngle: 0, endAngle: 360, length: 360, speed: 0, color: "#f8f8ff", lw: 10, ccw: false },
-            { x: cx, y: cy, radius: 220, startAngle: 0, endAngle: 60, length: 60, speed: 0.5, color: "#f8f8ff", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 220, startAngle: 120, endAngle: 180, length: 60, speed: 0.5, color: "#f8f8ff", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 220, startAngle: 240, endAngle: 300, length: 60, speed: 0.5, color: "#f8f8ff", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 240, startAngle: 20, endAngle: 120, length: 100, speed: 1, color: "#f8f8ff", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 240, startAngle: 140, endAngle: 240, length: 100, speed: 1, color: "#f8f8ff", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 240, startAngle: 260, endAngle: 360, length: 100, speed: 1, color: "#f8f8ff", lw: 15, ccw: false }
+            { x: cx, y: cy, radius: 100, startAngle: 0, endAngle: 360, length: 360, speed: 0, color: "#f8f8ff", lw: 5, ccw: false },
+            { x: cx, y: cy, radius: 110, startAngle: 0, endAngle: 60, length: 60, speed: SPEED_C_1_1, color: "#f8f8ff", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 110, startAngle: 120, endAngle: 180, length: 60, speed: SPEED_C_1_1, color: "#f8f8ff", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 110, startAngle: 240, endAngle: 300, length: 60, speed: SPEED_C_1_1, color: "#f8f8ff", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 120, startAngle: 20, endAngle: 120, length: 100, speed: SPEED_C_2, color: "#f8f8ff", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 120, startAngle: 140, endAngle: 240, length: 100, speed: SPEED_C_2, color: "#f8f8ff", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 120, startAngle: 260, endAngle: 360, length: 100, speed: SPEED_C_2, color: "#f8f8ff", lw: 7.5, ccw: false }
         ]
 
         this.blueprint2 = [
-            { x: cx, y: cy, radius: 200, startAngle: 0, endAngle: 360, length: 360, speed: 0, color: "#FF0000", lw: 10, ccw: false },
-            { x: cx, y: cy, radius: 220, startAngle: 0, endAngle: 60, length: 60, speed: -3, color: "#FF0000", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 220, startAngle: 120, endAngle: 180, length: 60, speed: -3, color: "#FF0000", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 220, startAngle: 240, endAngle: 300, length: 60, speed: -3, color: "#FF0000", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 240, startAngle: 20, endAngle: 120, length: 100, speed: 1, color: "#FF0000", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 240, startAngle: 140, endAngle: 240, length: 100, speed: 1, color: "#FF0000", lw: 15, ccw: false },
-            { x: cx, y: cy, radius: 240, startAngle: 260, endAngle: 360, length: 100, speed: 1, color: "#FF0000", lw: 15, ccw: false }
+            { x: cx, y: cy, radius: 100, startAngle: 0, endAngle: 360, length: 360, speed: 0, color: "#FF0000", lw: 5, ccw: false },
+            { x: cx, y: cy, radius: 110, startAngle: 0, endAngle: 60, length: 60, speed: SPEED_C_1_2, color: "#FF0000", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 110, startAngle: 120, endAngle: 180, length: 60, speed: SPEED_C_1_2, color: "#FF0000", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 110, startAngle: 240, endAngle: 300, length: 60, speed: SPEED_C_1_2, color: "#FF0000", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 120, startAngle: 20, endAngle: 120, length: 100, speed: SPEED_C_2, color: "#FF0000", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 120, startAngle: 140, endAngle: 240, length: 100, speed: SPEED_C_2, color: "#FF0000", lw: 7.5, ccw: false },
+            { x: cx, y: cy, radius: 120, startAngle: 260, endAngle: 360, length: 100, speed: SPEED_C_2, color: "#FF0000", lw: 7.5, ccw: false }
         ]
 
 

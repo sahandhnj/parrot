@@ -14,15 +14,17 @@
   color: #333;
 }
 
-h1 {
+/* h1 {
   font-size: large;
-}
+} */
 
-h2 {
+h1 {
   color: whitesmoke;
 }
 
 canvas {
+  width: 200px;
+  height: 200px;
   margin: 0px;
 }
 
