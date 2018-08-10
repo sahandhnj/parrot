@@ -4,6 +4,8 @@ import './style/App.css';
 import WaveStream from 'react-wave-stream';
 import Recorder from './service/recorder';
 import RecordBtn from './container/recordBtn';
+import RecordAnimation from './container/recordAnimation';
+
 
 class App extends Component {
 	constructor(...props) {
@@ -68,6 +70,9 @@ class App extends Component {
 				</div>
 				<div className="wave-stream-container">
 					<WaveStream {...this.state.analyserData} />
+				</div>
+				<div>
+					<RecordAnimation />
 				</div>
 				<div>
 					<audio id="playAudio">
