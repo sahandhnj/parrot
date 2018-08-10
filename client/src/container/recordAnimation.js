@@ -106,7 +106,7 @@ class RecordAnimation extends Component {
 
     render() {
         return (
-            <div onContextMenu={this._handleContextMenu}>
+            <div className="assistantHolder" onContextMenu={this._handleContextMenu}>
                 <canvas ref="canvas" width={640} height={425} onMouseDown={this.onMouseDown} onMouseUp={this.onMouseUp} onTouchStart={this.props.down} onTouchEnd={this.props.up}/>
                 <div id="transcript">
                     {this.transcript()}
