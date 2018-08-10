@@ -3,7 +3,6 @@ import './style/App.css';
 
 import WaveStream from 'react-wave-stream';
 import Recorder from './service/recorder';
-import RecordBtn from './container/recordBtn';
 import RecordAnimation from './container/recordAnimation';
 
 
@@ -43,16 +42,16 @@ class App extends Component {
 
 	async stop() {
 		const { blob } = await this.recorder.stop();
-		
+
 		this.setState({
 			isRecording: false,
 			blob,
 		});
-		
+
 		const transcript = await Recorder.process(this.state.blob);
-		
-		this.setState({ 
-			blob: null ,
+
+		this.setState({
+			blob: null,
 			transcript: transcript,
 		});
 	}
@@ -65,14 +64,11 @@ class App extends Component {
 		return (
 			<div className="App">
 				<div className="App-header">
-					<h2>Hal9000</h2>
-					<RecordBtn down={this.start} up={this.stop} isRecording={this.state.isRecording} transcript={this.state.transcript}/> 
+					<h2>VA</h2>
+					<RecordAnimation down={this.start} up={this.stop} isRecording={this.state.isRecording} transcript={this.state.transcript} />
 				</div>
 				<div className="wave-stream-container">
 					<WaveStream {...this.state.analyserData} />
-				</div>
-				<div>
-					<RecordAnimation />
 				</div>
 				<div>
 					<audio id="playAudio">

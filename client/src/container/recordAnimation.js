@@ -1,19 +1,18 @@
 import React, { Component } from 'react';
 import '../style/RecordAnimation.css';
 import Assistant from '../service/assistant';
+const SPEED= 30;
 
 class RecordAnimation extends Component {
     blueprint1
     blueprint2
     c
     canvas
-    listening
 
     constructor(...props) {
         super(...props);
 
         this.state = {};
-        this.listening = false;
 
         this.onMouseUp = this.onMouseUp.bind(this);
         this.onMouseDown = this.onMouseDown.bind(this);
@@ -61,12 +60,13 @@ class RecordAnimation extends Component {
     animate1() {
         let _this = this;
         let assistant = new Assistant(this.c, this.blueprint1);
+
         setInterval(() => {
-            if (!_this.listening) {
+            if (!_this.props.isRecording) {
                 _this.c.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
                 assistant.update();
             }
-        }, 30);
+        }, SPEED);
     }
 
     animate2() {
@@ -74,28 +74,38 @@ class RecordAnimation extends Component {
         let assistant = new Assistant(this.c, this.blueprint2);
 
         setInterval(() => {
-            if (_this.listening) {
+            if (_this.props.isRecording) {
                 _this.c.clearRect(0, 0, _this.canvas.width, _this.canvas.height);
                 assistant.update();
             }
-        }, 30);
+        }, SPEED);
     }
 
     onMouseDown() {
-        this.listening = false;
         this.props.down();
     }
 
     onMouseUp() {
-        this.listening = true;
         this.props.up();
+    }
+
+    transcript() {
+        if (this.props.transcript) {
+            return 'You said: ' + this.props.transcript;
+        }
+    }
+
+    _handleContextMenu = (event) => {
+        event.preventDefault();
     }
 
     render() {
         return (
-            <div>
-                <canvas ref="canvas" width={640} height={425} onMouseDown={this.onMouseUp} onMouseUp={this.onMouseDown} />
-                <div id='animation'> Test10 </div>
+            <div onContextMenu={this._handleContextMenu}>
+                <canvas ref="canvas" width={640} height={425} onMouseDown={this.onMouseDown} onMouseUp={this.onMouseUp} onTouchStart={this.props.down} onTouchEnd={this.props.up}/>
+                <div id="transcript">
+                    {this.transcript()}
+                </div>
             </div>
         );
     }
