@@ -12,6 +12,7 @@ import { Calculator } from './Calculator';
 import { Weather } from './Weather';
 import { SystemMonitor } from './SystemMonitor';
 import { NLPService } from './NLPService';
+import { CommandRunner } from './CommandRunner';
 
 const rawDir = 'media/raw';
 const outputDir = 'static/output';
@@ -31,12 +32,12 @@ export class AudioPipline {
             const outputFile = path.join(outputDir, uuid + '.wav');
             const nlpTreeFile = path.join(nlpTreeDir, uuid + '.json');
 
-            let binaryArray = new Uint8Array(req.files.audio.data);
+            let binaryArray = new Uint16Array(req.files.audio.data);
             await fsp.writeFileAsync(rawFile, new Buffer(binaryArray as any));
-
-            transcription = await InteractionService.syncRecognize(rawFile);
-            console.log('transcription:', transcription);
-
+            
+            transcription = await CommandRunner.transcribe(rawFile);
+            // transcription = await InteractionService.syncRecognize(rawFile);
+            console.log(transcription);
             if (!transcription) {
                 res.sendStatus(400);
                 return res.send();

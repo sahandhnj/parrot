@@ -9,3 +9,4 @@ static/output/*
 data
 static/talkback.wav
 media/nlpTrees
+deepspeech
